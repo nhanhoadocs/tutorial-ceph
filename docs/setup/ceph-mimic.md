@@ -113,6 +113,8 @@
     init 6
     ```
 
+> Các server Mimic2 và Mimic3 thực hiện tương tự
+
 ## Cài đặt Ceph 
 
 Các bước ở dưới được thực hiện toàn toàn trên Node `mimic1`
@@ -230,7 +232,7 @@ Các bước ở dưới được thực hiện toàn toàn trên Node `mimic1`
     -rw-------   1 root root   73 Feb  1 11:29 ceph.mon.keyring
     ```
 
-- Để node `mimic1` có thể thao tác với cụm chúng ta cần bổ sung key file `ceph.client.admin.keyring` vào trong folder cấu hình 
+- Để node `mimic1` có thể thao tác với cluster chúng ta cần gán cho node `mimic1` với quyền admin bằng cách bổ sung cho node này `admin.keying`
     ```sh  
     ceph-deploy admin mimic1
     ```
