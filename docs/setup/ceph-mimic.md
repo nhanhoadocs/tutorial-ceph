@@ -317,11 +317,26 @@ Ceph-mgr là thành phần cài đặt cần khởi tạo từ bản Luminous, c
 
 ## Khởi tạo OSD
 
-Tạo OSD thông qua ceph-deploy tại host mimic1
+Tạo OSD thông qua ceph-deploy tại host `mimic1`
 
-- Trên mimic1, dùng ceph-deploy để partition ổ cứng OSD, thay `mimic1` bằng hostname của host chứa OSD
+- Xác định các ổ đang gắn vào sử dụng làm OSD
+    ```sh 
+    [root@mimic1 ~]# lsblk
+    NAME                    MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+    fd0                       2:0    1    4K  0 disk
+    sda                       8:0    0   50G  0 disk
+    ├─sda1                    8:1    0  512M  0 part /boot
+    └─sda2                    8:2    0 49.5G  0 part
+      ├─VolGroup00-LogVol01 253:0    0 45.6G  0 lvm  /
+      └─VolGroup00-LogVol00 253:1    0  3.9G  0 lvm  [SWAP]
+    sdb                       8:16   0  100G  0 disk
+    sdc                       8:32   0  100G  0 disk
+    sr0                      11:0    1 1024M  0 rom
+    ```
+
+- Dùng ceph-deploy để format ổ đĩa dùng làm OSD
     ```sh
-    ceph-deploy disk zap mimic1 /dev/vdb
+    ceph-deploy disk zap mimic1 /dev/sdb
     ```
 
 - Tạo OSD với ceph-deploy
@@ -344,6 +359,8 @@ Tạo OSD thông qua ceph-deploy tại host mimic1
     sdb                                                                                                     8:112  0   39G  0 disk  
     └─ceph--42804049--4734--4a87--b776--bfad5d382114-osd--data--e6346e12--c312--4ccf--9b5f--0efeb61d0144  253:5    0   39G  0 lvm   /var/lib/ceph/osd/ceph-0
     ```
+
+- Thực hiện tương tự với các OSD còn lại thay thế `mimic1` bằng host thao tác, và `/dev/sdb` bằng device thao tác
 
 ## Kiểm tra
 Thực hiện trên mimic1
