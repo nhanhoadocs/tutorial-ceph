@@ -321,7 +321,7 @@ Tạo OSD thông qua ceph-deploy tại host mimic1
 
 - Trên mimic1, dùng ceph-deploy để partition ổ cứng OSD, thay `mimic1` bằng hostname của host chứa OSD
     ```sh
-    ceph-deploy disk zap mimic1:/dev/vdb
+    ceph-deploy disk zap mimic1 /dev/vdb
     ```
 
 - Tạo OSD với ceph-deploy
