@@ -36,6 +36,22 @@
 
 ## Các bước chuẩn bị trên từng Server
 
+- Cài đặt NTPD 
+    ```sh 
+    yum install chrony -y 
+    ```
+
+- Enable NTPD 
+    ```sh 
+    systemctl start chronyd 
+    systemctl enable chronyd 
+    ```
+
+- Kiểm tra chronyd hoạt động 
+    ```sh 
+    chronyc sources -v 
+    ```
+
 - Đặt hostname
     ```sh
     hostnamectl set-hostname mimic1
@@ -284,13 +300,20 @@ Ceph-mgr là thành phần cài đặt cần khởi tạo từ bản Luminous, c
     ```
 
 - Ceph-mgr hỗ trợ dashboard để quan sát trạng thái của cluster, Enable mgr dashboard trên host mimic1
+
     ```sh
     ceph mgr module enable dashboard
+    ceph dashboard create-self-signed-cert
+    ceph dashboard set-login-credentials <username> <password>
+    ceph mgr services
     ```
 
-- Truy cập vào mgr dashboard để kiểm tra
-
+- Truy cập vào mgr dashboard với username và password vừa đặt ở phía trên để kiểm tra
+    ```sh 
     http://<ip-mimic1>:7000
+    ```
+    ![](../../images/dashboard.png)
+
 
 ## Khởi tạo OSD
 
