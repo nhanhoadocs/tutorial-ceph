@@ -62,12 +62,12 @@ Yêu cầu: Có cụm Ceph và OpenStack được cài đặt theo 2 tutorial tr
         - Cluster_network(Ceph-Rep): 10.10.14.63
 	```
 
-- Cài đặt lib ceph python cho các node `Compute` và `Controller`
+## Cài đặt lib ceph python cho các node `Compute` và `Controller`
 	```
 	yum install -y python-rbd ceph-common
 	```
 
-- Tạo pool trên Ceph
+## Tạo pool trên Ceph
 
 	> Lưu ý: Có thể tính toán trước số PG khi tạo các pool bằng cách sử dụng công cụ tính toán có sẵn trên trang chủ http://ceph.com/pgcalc
 	```sh 
@@ -85,7 +85,7 @@ Yêu cầu: Có cụm Ceph và OpenStack được cài đặt theo 2 tutorial tr
 	rbd pool init backups
 	```
 
-- Thực hiện copy cấu hình qua các node Controller, Compute
+## Thực hiện copy cấu hình qua các node Controller, Compute
 	```sh 
 	ssh 10.10.10.61 sudo tee /etc/ceph/ceph.conf < /etc/ceph/ceph.conf
 	ssh 10.10.10.62 sudo tee /etc/ceph/ceph.conf < /etc/ceph/ceph.conf
