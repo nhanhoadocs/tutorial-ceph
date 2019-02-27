@@ -63,19 +63,21 @@ Yêu cầu: Có cụm Ceph và OpenStack được cài đặt theo 2 tutorial tr
 	```
 
 ## Cài đặt lib ceph python cho các node `Compute` và `Controller`
-	```
-	yum install -y python-rbd ceph-common
-	```
+
+```
+yum install -y python-rbd ceph-common
+```
 
 ## Tạo pool trên Ceph
 
-	> Lưu ý: Có thể tính toán trước số PG khi tạo các pool bằng cách sử dụng công cụ tính toán có sẵn trên trang chủ http://ceph.com/pgcalc
-	```sh 
-	ceph osd pool create volumes 128 128
-	ceph osd pool create vms 128 128
-	ceph osd pool create images 128 128
-	ceph osd pool create backups 128 128
-	```
+> Lưu ý: Có thể tính toán trước số PG khi tạo các pool bằng cách sử dụng công cụ tính toán có sẵn trên trang chủ http://ceph.com/pgcalc
+
+```sh 
+ceph osd pool create volumes 128 128
+ceph osd pool create vms 128 128
+ceph osd pool create images 128 128
+ceph osd pool create backups 128 128
+```
 	
 - Khởi tạo ban đầu trước khi sử dụng pool
 	```sh 
