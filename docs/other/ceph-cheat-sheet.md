@@ -384,6 +384,11 @@ rbd snap rm {pool-name}/{images}@{snap-name}
 rbd snap purge {pool-name}/{images}
 ```
 
+- Export volume 
+```sh 
+rbd export --rbd-concurrent-management-ops 20 --pool={pool-name} {images} {images}.img
+```
+
 ## Các lệnh thao tác đối với Object
 
 - Show toàn bộ pool name 
