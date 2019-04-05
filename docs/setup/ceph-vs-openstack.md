@@ -214,7 +214,7 @@ virsh secret-set-value --secret 414ba151-4068-40c6-9d7b-84998ce6a5a6 --base64 $(
 Secret value set   
 ```
 
-## Quay lại node Compute 
+## Quay lại node Controller
 - Bổ sung cấu hinh `/etc/cinder/cinder.conf` tren cac node controller
 ```sh 
 [DEFAULT]
@@ -327,7 +327,7 @@ Secret 805b9716-7fe8-45dd-8e1e-5dfdeff8b9be created
 
 - Gán giá trị của `client.nova` cho `uuid`
 ```sh 
-virsh secret-set-value --secret 414ba151-4068-40c6-9d7b-84998ce6a5a6 --base64 $(cat /root/client.nova)
+virsh secret-set-value --secret 805b9716-7fe8-45dd-8e1e-5dfdeff8b9be --base64 $(cat /root/client.nova)
 ```
 > Output 
 ```sh 
