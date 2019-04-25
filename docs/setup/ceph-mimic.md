@@ -88,22 +88,36 @@
     yum update -y
     ```
 
-- Mở port cho Ceph trên Selinux
-    ```sh 
-    null
-    ```
-
 - Vô hiệu hóa Selinux
     ```sh
+    setenforce 0
     sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux
     ```
 
 - Mở port cho Ceph trên Firewalld  
     ```sh 
-    null
+    #ceph-admin
+    systemctl start firewalld
+    systemctl enable firewalld
+    sudo firewall-cmd --zone=public --add-port=80/tcp --permanent
+    sudo firewall-cmd --zone=public --add-port=2003/tcp --permanent
+    sudo firewall-cmd --zone=public --add-port=4505-4506/tcp --permanent
+    sudo firewall-cmd --reload
+
+    # mon
+    sudo systemctl start firewalld
+    sudo systemctl enable firewalld
+    sudo firewall-cmd --zone=public --add-port=6789/tcp --permanent
+    sudo firewall-cmd --reload
+
+    # osd
+    sudo systemctl start firewalld
+    sudo systemctl enable firewalld
+    sudo firewall-cmd --zone=public --add-port=6800-7300/tcp --permanent
+    sudo firewall-cmd --reload
     ```
 
-- Disable firewall 
+- Hoặc có thể disable firewall 
     ```sh 
     sudo systemctl disable firewalld
     sudo systemctl stop firewalld
@@ -137,7 +151,9 @@ Các bước ở dưới được thực hiện toàn toàn trên Node `mimic1`
 
 - Cài đặt `ceph-deploy`
     ```sh 
-    rpm -ivh https://download.ceph.com/rpm-mimic/el7/noarch/ceph-deploy-2.0.1-0.noarch.rpm
+    yum install -y wget 
+    wget https://download.ceph.com/rpm-mimic/el7/noarch/ceph-deploy-2.0.1-0.noarch.rpm --no-check-certificate
+    rpm -ivh ceph-deploy-2.0.1-0.noarch.rpm
     ```
 
 - Cài đặt `python-setuptools` để `ceph-deploy` có thể hoạt động ổn định
