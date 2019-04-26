@@ -326,7 +326,7 @@ Ceph-mgr là thành phần cài đặt cần khởi tạo từ bản Luminous, c
 
 - Truy cập vào mgr dashboard với username và password vừa đặt ở phía trên để kiểm tra
     ```sh 
-    http://<ip-mimic1>:7000
+    https://<ip-mimic1>:8443
     ```
     ![](../../images/dashboard.png)
 
