@@ -301,7 +301,7 @@ cinder type-create ceph
 cinder type-key ceph set volume_backend_name=ceph
 ```
 
-- Restart lai dich vu nova-compute trên node Compute
+### 5.5 Restart lai dich vu nova-compute trên node Compute
 ```sh 
 systemctl restart openstack-nova-compute
 ```
