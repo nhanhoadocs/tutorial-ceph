@@ -150,7 +150,7 @@ rados df
 
 - Enable các module MGR (zabbix, dashboard,...)
 ```sh 
-mgr module enable {module}
+ceph mgr module enable {module}
 ```
 
 ## Các lệnh thao tác với OSD 
@@ -537,7 +537,7 @@ ceph-conf --show-conf
 ceph-conf --show-config
 ```
 
-- 
+- Kiểm tra dung lượng của các images hiện có
 ```sh 
 for i in $(rbd ls {pool-name}); 
 do 
@@ -730,6 +730,12 @@ sudo ceph-fuse -m 192.168.0.1:6789 /home/username/cephfs
 
 # Cấu hình trên fstab
 10.10.10.10:6789:/     /mnt/ceph    ceph    name=admin,secretfile=/etc/ceph/secret.key,noatime,_netdev    0       2
+```
+
+## Force unmount folder 
+
+```sh 
+rbd unmap -o force $DEV
 ```
 
 # Cấu hình ceph.conf tham khảo
