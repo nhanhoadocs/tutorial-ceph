@@ -1,5 +1,13 @@
 # OpenStack tích hợp với Ceph
 
+[1. Chuẩn bị mô hình](#1)
+
+[2. Tích hợp Glance(Images)](#2) 
+
+[3. Tích hợp Cinder(Volumes)](#3) 
+
+[4. Tích hợp Nova(Compute)](#4)  
+
 Mô hình cụm Ceph kết nối OpenStack đầy đủ sẽ bao gồm cụm Ceph và Cụm OpenStack HA và Monitor node
 
 ![](../../images/mohinh-ops-ceph.png)
@@ -8,28 +16,24 @@ Mô hình cụm Ceph kết nối OpenStack đầy đủ sẽ bao gồm cụm Cep
 
 - Images: OpenStack Glance quản lý các image cho các VM, lưu trữ các images dưới dạng nhị phân. 
 - Volumes: Các Block Devices được sử dụng để boot các VM hoặc là các ổ đĩa đính kèm thêm cho VM
-- Guest Disk: Mặc định khi khởi động VM thì disk của nó được xuất hiện lưu trữ dưới dạng filesystems  (Thường là /var/lib/nova/instances/uuid/). 
+- Guest Disk: Mặc định khi tạo VM từ images thì disk của nó được lưu trữ dưới dạng filesystems (thường là /var/lib/nova/instances/uuid/). 
 
 Từ bản sau Hanava thì có thể khởi động mọi VM lưu trữ trực tiếp trong Ceph mà không cần sử dụng Cinder. Điều này thuận tiện cho việc di chuyển các VM từ node compute này sang node compute khác gần như tức thì. Chúng ta có thể sử dụng Glance để lưu trữ các images trên Ceph Block Device, và chúng ta có thể khởi động 1 VM bằng cách sử dụng 1 bản sao của 1 images. 
 
-[1. Chuẩn bị mô hình](#1)
-
-[2. Tích hợp Glance](#2) 
-
-[3. Tích hợp Cinder](#3) 
-
-[4. Tích hợp Nova](#4)  
-
 ## 1. Mô hình của Ceph hiện tại
 Cài đặt theo 1 trong các cách sau
-- Cụm node hoàn chỉnh (Gần giống với môi trường Product) [Tutorial](Link)
-- CephAIO (Chỉ để LAB ko khuyến cáo môi trường Product) [Tutorial](Link)
+- Cụm node hoàn chỉnh (Gần giống với môi trường Product)
+- CephAIO (Chỉ để LAB ko khuyến cáo môi trường Product)
+
+[Cài đặt Ceph](https://github.com/uncelvel/tutorial-ceph)
 
 ## 2. Mô hình của OpenStack hiện tại
-Cài đặt theo 1 trong các cách sau
-- Cụm cài đặt Manual 2node [Tutorial](manual_install.md)
-- Cụm cài đặt HA [Tutorial](ha_install.md)
-- Cụm cài đặt Pacstack [Tutorial](packstack_install.md)
+Cài đặt theo 1 trong các cách sau 
+- Cụm cài đặt Pacstack 
+- Cụm cài đặt Manual 2node 
+- Cụm cài đặt HA 
+
+[Cài đặt OPS](https://github.com/uncelvel/tutorial-openstack/#c%C3%A0i-%C4%91%E1%BA%B7t-openstack)
 
 ## 3. Môi trường chuẩn bị <a name="1"></a>
 
