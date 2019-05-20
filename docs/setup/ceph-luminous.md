@@ -2,9 +2,9 @@
 
 ### Mục tiêu LAB
 - Mô hình này sử dụng 3 server, trong đó:
-- Host `mimic1` cài đặt `ceph-deploy`, `ceph-mon`,` ceph-osd`, `ceph-mgr`
-- Host `mimic2` cài đặt `ceph-osd`
-- Host `mimic3` cài đặt `ceph-osd`
+- Host `ceph01` cài đặt `ceph-deploy`, `ceph-mon`,` ceph-osd`, `ceph-mgr`
+- Host `ceph02` cài đặt `ceph-osd`
+- Host `ceph03` cài đặt `ceph-osd`
 - Mô hình khá cơ bản cho việc áp dụng vào môi trường Product
 
 ## Chuẩn bị và môi trường LAB (3 Node)
@@ -19,7 +19,7 @@
 - `eth1`: dùng để các trao đổi thông tin giữa các node Ceph, cũng là đường Client kết nối vào
 - `eth2`: dùng để đồng bộ dữ liệu giữa các OSD
 
-- Phiên bản cài đặt : Ceph Mimic
+- Phiên bản cài đặt : Ceph luminous
 
 
 ## Mô hình 
@@ -54,7 +54,7 @@ chronyc sources -v
 
 - Đặt hostname
 ```sh
-hostnamectl set-hostname mimic1
+hostnamectl set-hostname ceph01
 ```
 
 - Đặt IP cho các node
@@ -131,16 +131,16 @@ sudo systemctl stop firewalld
 - Bổ sung file hosts
 ```sh
 cat << EOF >> /etc/hosts
-10.10.13.61 mimic1
-10.10.13.62 mimic2
-10.10.13.63 mimic3
+10.10.13.61 ceph01
+10.10.13.62 ceph02
+10.10.13.63 ceph03
 EOF
 ```
 > Lưu ý network setup trong /etc/hosts chính là đường `eth1` dùng để các trao đổi thông tin giữa các node Ceph, cũng là đường Client kết nối vào
 
 - Kiểm tra kết nối
 ```sh 
-ping -c 10 mimic1
+ping -c 10 ceph01
 ```
 
 - Khởi động lại máy
@@ -148,16 +148,16 @@ ping -c 10 mimic1
 init 6
 ```
 
-> Các server Mimic2 và Mimic3 thực hiện tương tự
+> Các server ceph02 và ceph03 thực hiện tương tự
 
 ## Cài đặt Ceph 
 
-Các bước ở dưới được thực hiện toàn toàn trên Node `mimic1`
+Các bước ở dưới được thực hiện toàn toàn trên Node `ceph01`
 
 - Cài đặt `ceph-deploy`
 ```sh 
 yum install -y wget 
-wget https://download.ceph.com/rpm-mimic/el7/noarch/ceph-deploy-2.0.1-0.noarch.rpm --no-check-certificate
+wget https://download.ceph.com/rpm-luminous/el7/noarch/ceph-deploy-2.0.1-0.noarch.rpm --no-check-certificate
 rpm -ivh ceph-deploy-2.0.1-0.noarch.rpm
 ```
 
@@ -183,9 +183,9 @@ ssh-keygen
 
 - Copy ssh key sang các node khác
 ```sh
-ssh-copy-id root@mimic1
-ssh-copy-id root@mimic2
-ssh-copy-id root@mimic3
+ssh-copy-id root@ceph01
+ssh-copy-id root@ceph02
+ssh-copy-id root@ceph03
 ```
 
 - Tạo các thư mục `ceph-deploy` để thao tác cài đặt vận hành Cluster
@@ -193,21 +193,21 @@ ssh-copy-id root@mimic3
 mkdir /ceph-deploy && cd /ceph-deploy
 ```
 
-- Khởi tại file cấu hình cho cụm với node quản lý là `mimic1`
+- Khởi tại file cấu hình cho cụm với node quản lý là `ceph01`
 ```sh
-ceph-deploy new mimic1
+ceph-deploy new ceph01
 ```
 
 - Kiểm tra lại thông tin folder `ceph-deploy`
 ```sh 
-[root@mimic1 ceph-deploy]# ls -lah
+[root@ceph01 ceph-deploy]# ls -lah
 total 12K
 drwxr-xr-x   2 root root   75 Jan 31 16:31 .
 dr-xr-xr-x. 18 root root  243 Jan 31 16:29 ..
 -rw-r--r--   1 root root 2.9K Jan 31 16:31 ceph-deploy-ceph.log
 -rw-r--r--   1 root root  195 Jan 31 16:31 ceph.conf
 -rw-------   1 root root   73 Jan 31 16:31 ceph.mon.keyring
-[root@mimic1 ceph-deploy]#
+[root@ceph01 ceph-deploy]#
 ```
 - `ceph.conf` : file config được tự động khởi tạo
 - `ceph-deploy-ceph.log` : file log của toàn bộ thao tác đối với việc sử dụng lệnh `ceph-deploy`
@@ -235,7 +235,7 @@ EOF
 
 - Cài đặt ceph trên toàn bộ các node ceph
 ```sh
-ceph-deploy install --release mimic mimic1 mimic2 mimic3 
+ceph-deploy install --release luminous ceph01 ceph02 ceph03 
 ```
 
 - Kiểm tra sau khi cài đặt 
@@ -244,7 +244,7 @@ ceph -v
 ```
 > Kết quả như sau là đã cài đặt thành công ceph trên node 
 ```sh 
-ceph version 13.2.4 (b10be4d44915a4d78a8e06aa31919e74927b142e) mimic (stable)
+ceph version 12.2.9 (9e300932ef8a8916fb3fda78c58691a6ab0f4217) luminous (stable)
 ```
 
 - Khởi tạo cluster với các node `mon` (Monitor-quản lý) dựa trên file `ceph.conf`
@@ -255,7 +255,7 @@ ceph-deploy mon create-initial
 - Sau khi thực hiện lệnh phía trên sẽ sinh thêm ra 05 file : `ceph.bootstrap-mds.keyring`, `ceph.bootstrap-mgr.keyring`, `ceph.bootstrap-osd.keyring`, `ceph.client.admin.keyring` và `ceph.bootstrap-rgw.keyring`. Quan sát bằng lệnh `ll -alh`
 
 ```sh
-[root@mimic1 ceph-deploy]# ls -lah
+[root@ceph01 ceph-deploy]# ls -lah
 total 348K
 drwxr-xr-x   2 root root  244 Feb  1 11:40 .
 dr-xr-xr-x. 18 root root  243 Feb  1 11:29 ..
@@ -269,19 +269,19 @@ dr-xr-xr-x. 18 root root  243 Feb  1 11:29 ..
 -rw-------   1 root root   73 Feb  1 11:29 ceph.mon.keyring
 ```
 
-- Để node `mimic1` có thể thao tác với cluster chúng ta cần gán cho node `mimic1` với quyền admin bằng cách bổ sung cho node này `admin.keying`
+- Để node `ceph01` có thể thao tác với cluster chúng ta cần gán cho node `ceph01` với quyền admin bằng cách bổ sung cho node này `admin.keying`
 ```sh  
-ceph-deploy admin mimic1
+ceph-deploy admin ceph01
 ```
 > Kiểm tra bằng lệnh 
 ```sh
-[root@mimic1 ceph-deploy]# ceph -s
+[root@ceph01 ceph-deploy]# ceph -s
 cluster:
-    id:     691a39d3-0789-49db-bf54-c0e2a774901a
+    id:     39d1a369-bf54-8907-d49b-490a771ac0e2
     health: HEALTH_OK
 
 services:
-    mon: 1 daemons, quorum mimic1
+    mon: 1 daemons, quorum ceph01
     mgr: no daemons active
     osd: 0 osds: 0 up, 0 in
 
@@ -294,23 +294,23 @@ data:
 
 ## Khởi tạo MGR
 
-Ceph-mgr là thành phần cài đặt cần khởi tạo từ bản Luminous, có thể cài đặt trên nhiều node hoạt động theo cơ chế Active-Passive
+Ceph-mgr là thành phần cài đặt cần khởi tạo từ bản Luminous, có thể cài đặt trên nhiều node hoạt động theo cơ chế `Active-Passive`
 
-- Cài đặt ceph-mgr trên mimic1
+- Cài đặt ceph-mgr trên ceph01
 ```sh
-ceph-deploy mgr create mimic1
+ceph-deploy mgr create ceph01
 ```
 
 - Kiểm tra cài đặt 
 ```sh
-[root@mimic1 ceph-deploy]# ceph -s
+[root@ceph01 ceph-deploy]# ceph -s
 cluster:
-    id:     691a39d3-0789-49db-bf54-c0e2a774901a
+    id:     39d1a369-bf54-8907-d49b-490a771ac0e2
     health: HEALTH_OK
 
 services:
-    mon: 1 daemons, quorum mimic1
-    mgr: mimic1(active)
+    mon: 1 daemons, quorum ceph01
+    mgr: ceph01(active)
     osd: 0 osds: 0 up, 0 in
 
     data:
@@ -320,7 +320,7 @@ services:
     pgs:
 ```
 
-- Ceph-mgr hỗ trợ dashboard để quan sát trạng thái của cluster, Enable mgr dashboard trên host mimic1
+- Ceph-mgr hỗ trợ dashboard để quan sát trạng thái của cluster, Enable mgr dashboard trên host ceph01
 
 ```sh
 ceph mgr module enable dashboard
@@ -331,23 +331,23 @@ ceph mgr services
 
 - Truy cập vào mgr dashboard với username và password vừa đặt ở phía trên để kiểm tra
 ```sh 
-https://<ip-mimic1>:8443
+https://<ip-ceph01>:7000
 ```
-![](../../images/dashboard-m.png)
+![](../../images/dashboard-l.png)
 
 
 ## Khởi tạo OSD
 
-Tạo OSD thông qua ceph-deploy tại host mimic1
+Tạo OSD thông qua ceph-deploy tại host ceph01
 
-- Trên mimic1, dùng ceph-deploy để partition ổ cứng OSD, thay `mimic1` bằng hostname của host chứa OSD
+- Trên ceph01, dùng ceph-deploy để partition ổ cứng OSD, thay `ceph01` bằng hostname của host chứa OSD
 ```sh
-ceph-deploy disk zap mimic1 /dev/vdb
+ceph-deploy disk zap ceph01 /dev/vdb
 ```
 
 - Tạo OSD với ceph-deploy
 ```sh
-ceph-deploy osd create --data /dev/sdb mimic1
+ceph-deploy osd create --data /dev/sdb ceph01
 ``` 
 
 - Kiểm tra osd vừa tạo bằng lệnh
@@ -367,7 +367,7 @@ sdb                                                                             
 ```
 
 ## Kiểm tra
-Thực hiện trên mimic1
+Thực hiện trên ceph01
 - Kiểm tra trạng thái của CEPH sau khi cài
 ```sh
 ceph -s
@@ -375,14 +375,14 @@ ceph -s
 
 - Kết quả của lệnh trên như sau: 
 ```sh
-ceph-deploy@mimic1:~/my-cluster$ ceph -s
+ceph-deploy@ceph01:~/my-cluster$ ceph -s
 cluster:
-    id:     691a39d3-0789-49db-bf54-c0e2a774901a
+    id:     39d1a369-bf54-8907-d49b-490a771ac0e2
     health: HEALTH_OK
 
 services:
-    mon: 1 daemons, quorum mimic1
-    mgr: mimic1(active)
+    mon: 1 daemons, quorum ceph01
+    mgr: ceph01(active)
     osd: 3 osds: 3 up, 3 in
 
 data:
