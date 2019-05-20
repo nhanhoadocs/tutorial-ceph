@@ -1,6 +1,6 @@
 # Tài liệu cài đặt vận hành 
 
-[Cài đặt CephAIO](https://github.com/uncelvel/script-ceph-lumi-aio)
+[Cài đặt CephAIO bản Luminous](https://github.com/uncelvel/script-ceph-lumi-aio)
 
 [Cài đặt Ceph bản Luminous](docs/setup/ceph-luminous.md)
 
