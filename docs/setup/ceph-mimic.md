@@ -12,8 +12,8 @@
 - OS
 - CentOS7 - 64 bit
 - 05: HDD, trong đó:
-- `vda`: sử dụng để cài OS
-- `vdb`: sử dụng làm OSD (nơi chứa dữ liệu của client)
+- `sda`: sử dụng để cài OS
+- `sdb`: sử dụng làm OSD (nơi chứa dữ liệu của client)
 - 03 NICs: 
 - `eth0`: dùng để ssh và tải gói cài đặt
 - `eth1`: dùng để các trao đổi thông tin giữa các node Ceph, cũng là đường Client kết nối vào
@@ -294,7 +294,7 @@ data:
 
 ## Khởi tạo MGR
 
-Ceph-mgr là thành phần cài đặt cần khởi tạo từ bản Luminous, có thể cài đặt trên nhiều node hoạt động theo cơ chế Active-Passive
+Ceph-mgr là thành phần cài đặt yêu cầu cần khởi tạo từ bản luminous, có thể cài đặt trên nhiều node hoạt động theo cơ chế `Active-Passive`
 
 - Cài đặt ceph-mgr trên mimic1
 ```sh
