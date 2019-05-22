@@ -311,7 +311,7 @@ rbd ls {pool-name}
 
 - Create 1 images 
 ```sh 
-rbd create {pool-name}/{images} --size {size}
+rbd create {pool-name}/{images} --size {size}G
 ```
 
 - Hiển thị chi tiết images 

@@ -13,7 +13,7 @@
 - CentOS7 - 64 bit
 - 05: HDD, trong đó:
 - `sda`: sử dụng để cài OS
-- `sdb`: sử dụng làm OSD (nơi chứa dữ liệu của client)
+- `sdb`,`sdc`,`sdd`: sử dụng làm OSD (nơi chứa dữ liệu)
 - 03 NICs: 
 - `eth0`: dùng để ssh và tải gói cài đặt
 - `eth1`: dùng để các trao đổi thông tin giữa các node Ceph, cũng là đường Client kết nối vào
