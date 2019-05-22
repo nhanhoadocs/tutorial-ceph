@@ -31,7 +31,7 @@
 ## IP Planning
 - Phân hoạch IP cho các máy chủ trong mô hình trên
 
-![](../../images/ip-planning.png)
+![](../../images/ip-planning1.png)
 
 
 ## Các bước chuẩn bị trên từng Server
