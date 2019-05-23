@@ -44,10 +44,28 @@ ceph -s
 ```
 
 ## Bắt đầu cài đặt 
+
+Khỏi tạo pool cho cụm Ceph sử dụng [Công cụ](https://ceph.com/pgcalc/)
+
+![](../../images/pg_calc.png)
+
+Sẽ gen ra 1 câu lệnh create như sau 
+```sh 
+## Note: The 'while' loops below pause between pools to allow all
+##       PGs to be created.  This is a safety mechanism to prevent
+##       saturating the Monitor nodes.
+## -------------------------------------------------------------------
+
+ceph osd pool create images 1024
+ceph osd pool set images size 2
+while [ $(ceph -s | grep creating -c) -gt 0 ]; do echo -n .;sleep 1; done
+```
+
+Kiểm tra 
 	
 Thao tác trên Node Ceph create image
 ```sh
-rbd create --size 4096 --pool datastore vol01
+rbd create {pool-name}/{images} --size {size}G
 ```
 
 Thao tác 
