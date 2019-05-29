@@ -41,34 +41,38 @@ Yêu cầu: Có cụm Ceph và OpenStack được cài đặt theo 2 tutorial tr
 
 - Cụm OpenStack
 ```sh 
-- Controller: 
+Controller: 
 - Manager_api_horizon_network: 10.10.10.71
 - Provider: 10.10.11.71
 - Data_VM: 10.0.12.71
-- Ceph-Com: 10.0.0.13.71
-- Compute1: 
+- Ceph-Com: 10.0.13.71
+
+Compute1: 
 - Manager_api_horizon_network: 10.10.10.72
 - Provider: 10.10.11.72
 - Data_VM: 10.0.12.72
-- Ceph-Com: 10.0.0.13.72
-- Compute2: 
+- Ceph-Com: 10.0.13.72
+
+Compute2: 
 - Manager_api_horizon_network: 10.10.10.73
 - Provider: 10.10.11.73
 - Data_VM: 10.0.12.73
-- Ceph-Com: 10.0.0.13.73
+- Ceph-Com: 10.0.13.73
 ```
 
 - Cụm Ceph
 ```sh 
-- Ceph1: 
+Ceph1: 
 - Manager_network: 10.10.10.61
 - Public_network(Ceph-Com): 10.10.13.61
 - Cluster_network(Ceph-Rep): 10.10.14.61
-- Ceph2:
+
+Ceph2:
 - Manager_network: 10.10.10.62
 - Public_network(Ceph-Com): 10.10.13.62
 - Cluster_network(Ceph-Rep): 10.10.14.62
-- Ceph3:
+
+Ceph3:
 - Manager_network: 10.10.10.63
 - Public_network(Ceph-Com): 10.10.13.63
 - Cluster_network(Ceph-Rep): 10.10.14.63
