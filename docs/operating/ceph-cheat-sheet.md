@@ -324,6 +324,11 @@ rbd info {pool-name}/{images}
 rbd diff {pool-name}/{images} | awk '{SUM += $2} END {print SUM/1024/1024 " MB"}'
 ```
 
+- Điều chỉnh dung lượng images 
+```sh 
+rbd resize {pool-name}/{images} --size {size}G
+```
+
 - Hiển thị images đang được mapped (Trên Client)
 ```sh 
 rbd showmapped
