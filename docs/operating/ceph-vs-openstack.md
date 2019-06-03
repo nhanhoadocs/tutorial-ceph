@@ -140,7 +140,7 @@ sudo chmod 0640 /etc/ceph/ceph.client.glance.keyring
 show_image_direct_url = True
 
 [glance_store]
-show_image_direct_url = True
+#show_image_direct_url = True
 default_store = rbd
 stores = file,http,rbd
 rbd_store_pool = images
