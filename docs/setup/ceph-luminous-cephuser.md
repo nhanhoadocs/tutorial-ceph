@@ -148,22 +148,40 @@ ping -c 10 ceph01
 init 6
 ```
 
+- Bổ sung user `cephuser`
+```sh 
+sudo useradd -d /home/cephuser -m cephuser
+sudo passwd cephuser
+````
+
+- Cấp quyền sudo cho `cephuser`
+```sh
+echo "cephuser ALL = (root) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/cephuser
+sudo chmod 0440 /etc/sudoers.d/cephuser
+```
+
 > Các server ceph02 và ceph03 thực hiện tương tự
 
 ## Cài đặt Ceph 
 
-Các bước ở dưới được thực hiện toàn toàn trên Node `ceph01`
+Các bước ở dưới được thực hiện toàn toàn trên Node `ceph01` và sử dụng `cephuser` để thao tác
+
+- Chuyển qua User `cephuser` để thao tác
+```sh 
+su cephuser
+cd 
+```
 
 - Cài đặt `ceph-deploy`
 ```sh 
-yum install -y wget 
-wget https://download.ceph.com/rpm-luminous/el7/noarch/ceph-deploy-2.0.1-0.noarch.rpm --no-check-certificate
-rpm -ivh ceph-deploy-2.0.1-0.noarch.rpm
+sudo yum install -y wget 
+sudo wget https://download.ceph.com/rpm-luminous/el7/noarch/ceph-deploy-2.0.1-0.noarch.rpm --no-check-certificate
+sudo rpm -ivh ceph-deploy-2.0.1-0.noarch.rpm
 ```
 
 - Cài đặt `python-setuptools` để `ceph-deploy` có thể hoạt động ổn định
 ```sh 
-curl https://bootstrap.pypa.io/ez_setup.py | python
+sudo curl https://bootstrap.pypa.io/ez_setup.py | python
 ```
 
 - Kiểm tra cài đặt 
@@ -183,14 +201,14 @@ ssh-keygen
 
 - Copy ssh key sang các node khác
 ```sh
-ssh-copy-id root@ceph01
-ssh-copy-id root@ceph02
-ssh-copy-id root@ceph03
+ssh-copy-id cephuser@ceph01
+ssh-copy-id cephuser@ceph02
+ssh-copy-id cephuser@ceph03
 ```
 
 - Tạo các thư mục `ceph-deploy` để thao tác cài đặt vận hành Cluster
 ```sh
-mkdir /ceph-deploy && cd /ceph-deploy
+mkdir ceph-deploy && cd ceph-deploy
 ```
 
 - Khởi tại file cấu hình cho cụm với node quản lý là `ceph01`
@@ -200,14 +218,14 @@ ceph-deploy new ceph01
 
 - Kiểm tra lại thông tin folder `ceph-deploy`
 ```sh 
-[root@ceph01 ceph-deploy]# ls -lah
+[cephuser@ceph01 ceph-deploy]# ls -lah
 total 12K
 drwxr-xr-x   2 root root   75 Jan 31 16:31 .
 dr-xr-xr-x. 18 root root  243 Jan 31 16:29 ..
 -rw-r--r--   1 root root 2.9K Jan 31 16:31 ceph-deploy-ceph.log
 -rw-r--r--   1 root root  195 Jan 31 16:31 ceph.conf
 -rw-------   1 root root   73 Jan 31 16:31 ceph.mon.keyring
-[root@ceph01 ceph-deploy]#
+[cephuser@ceph01 ceph-deploy]#
 ```
 - `ceph.conf` : file config được tự động khởi tạo
 - `ceph-deploy-ceph.log` : file log của toàn bộ thao tác đối với việc sử dụng lệnh `ceph-deploy`
@@ -240,7 +258,7 @@ ceph-deploy install --release luminous ceph01 ceph02 ceph03
 
 - Kiểm tra sau khi cài đặt 
 ```sh 
-ceph -v 
+sudo ceph -v 
 ```
 > Kết quả như sau là đã cài đặt thành công ceph trên node 
 ```sh 
@@ -255,7 +273,7 @@ ceph-deploy mon create-initial
 - Sau khi thực hiện lệnh phía trên sẽ sinh thêm ra 05 file : `ceph.bootstrap-mds.keyring`, `ceph.bootstrap-mgr.keyring`, `ceph.bootstrap-osd.keyring`, `ceph.client.admin.keyring` và `ceph.bootstrap-rgw.keyring`. Quan sát bằng lệnh `ll -alh`
 
 ```sh
-[root@ceph01 ceph-deploy]# ls -lah
+[cephuser@ceph01 ceph-deploy]# ls -lah
 total 348K
 drwxr-xr-x   2 root root  244 Feb  1 11:40 .
 dr-xr-xr-x. 18 root root  243 Feb  1 11:29 ..
@@ -275,7 +293,7 @@ ceph-deploy admin ceph01
 ```
 > Kiểm tra bằng lệnh 
 ```sh
-[root@ceph01 ceph-deploy]# ceph -s
+[cephuser@ceph01 ceph-deploy]# ceph -s
 cluster:
     id:     39d1a369-bf54-8907-d49b-490a771ac0e2
     health: HEALTH_OK
@@ -303,7 +321,7 @@ ceph-deploy mgr create ceph01
 
 - Kiểm tra cài đặt 
 ```sh
-[root@ceph01 ceph-deploy]# ceph -s
+[cephuser@ceph01 ceph-deploy]# ceph -s
 cluster:
     id:     39d1a369-bf54-8907-d49b-490a771ac0e2
     health: HEALTH_OK
@@ -323,8 +341,8 @@ services:
 - Ceph-mgr hỗ trợ dashboard để quan sát trạng thái của cluster, Enable mgr dashboard trên host ceph01
 
 ```sh
-ceph mgr module enable dashboard
-ceph mgr services
+sudo ceph mgr module enable dashboard
+sudo ceph mgr services
 ```
 
 - Truy cập vào mgr dashboard với username và password vừa đặt ở phía trên để kiểm tra
@@ -350,7 +368,7 @@ ceph-deploy osd create --data /dev/sdb ceph01
 
 - Kiểm tra osd vừa tạo bằng lệnh
 ```sh
-ceph osd tree
+sudo ceph osd tree
 ``` 
 
 - Kiểm tra ID của OSD bằng lệnh
@@ -368,12 +386,12 @@ sdb                                                                             
 Thực hiện trên ceph01
 - Kiểm tra trạng thái của CEPH sau khi cài
 ```sh
-ceph -s
+sudo ceph -s
 ```
 
 - Kết quả của lệnh trên như sau: 
 ```sh
-ceph-deploy@ceph01:~/my-cluster$ ceph -s
+cephuser@ceph01:~/my-cluster$ ceph -s
 cluster:
     id:     39d1a369-bf54-8907-d49b-490a771ac0e2
     health: HEALTH_OK

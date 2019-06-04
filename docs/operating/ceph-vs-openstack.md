@@ -327,8 +327,8 @@ ceph auth get-or-create client.nova mon 'allow r' osd 'allow class-read object_p
 
 - Copy key `nova` sang các node Compute
 ```sh
-ceph auth get-or-create client.cinder | ssh 10.10.10.72 sudo tee /etc/ceph/ceph.client.cinder.keyring
-ceph auth get-or-create client.cinder | ssh 10.10.10.73 sudo tee /etc/ceph/ceph.client.cinder.keyring
+ceph auth get-or-create client.cinder | ssh 10.10.10.72 sudo tee /etc/ceph/eph.client.nova.keyring 
+ceph auth get-or-create client.cinder | ssh 10.10.10.73 sudo tee /etc/ceph/ceph.client.nova.keyring 
 
 ceph auth get-key client.cinder | ssh 10.10.10.72 tee /root/client.cinder
 ceph auth get-key client.cinder | ssh 10.10.10.73 tee /root/client.cinder
