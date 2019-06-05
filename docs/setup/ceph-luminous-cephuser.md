@@ -245,9 +245,10 @@ Trong đó:
 cat << EOF >> ceph.conf
 osd pool default size = 2
 osd pool default min size = 1
-osd crush chooseleaf type = 0
 osd pool default pg num = 128
 osd pool default pgp num = 128
+
+osd crush chooseleaf type = 1
 
 public network = 10.10.13.0/24
 cluster network = 10.10.14.0/24
