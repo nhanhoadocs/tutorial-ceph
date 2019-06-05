@@ -302,7 +302,7 @@ ceph-deploy admin ceph01
 ```
 > Kiểm tra bằng lệnh 
 ```sh
-[cephuser@ceph01 ceph-deploy]# ceph -s
+[cephuser@ceph01 ceph-deploy]# sudo ceph -s
 cluster:
     id:     39d1a369-bf54-8907-d49b-490a771ac0e2
     health: HEALTH_OK
