@@ -357,7 +357,7 @@ sudo ceph mgr services
 
 - Truy cập vào mgr dashboard với username và password vừa đặt ở phía trên để kiểm tra
 ```sh 
-https://<ip-ceph01>:7000
+http://<ip-ceph01>:7000
 ```
 ![](../../images/dashboard-l.png)
 
