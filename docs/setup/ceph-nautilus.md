@@ -324,6 +324,7 @@ services:
 - Ceph-mgr hỗ trợ dashboard để quan sát trạng thái của cluster, Enable mgr dashboard trên host ceph01
 
 ```sh
+yum install ceph-mgr-dashboard -y
 ceph mgr module enable dashboard
 ceph dashboard create-self-signed-cert
 ceph dashboard set-login-credentials <username> <password>
