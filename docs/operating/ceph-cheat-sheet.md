@@ -40,8 +40,13 @@ ceph-deploy new {host}
 
 - Tạo mới Node MGR
 ```sh 
+ceph-deploy mgr create {host}
 ```
+
 - Xóa node MGR
+```sh 
+# 
+```
 
 - Push config mới qua các node client 
 ```sh 
@@ -54,6 +59,15 @@ ceph-deploy rgw create {host}
 ```
 
 - Push key qua client 
+
+- Xóa node 
+```sh 
+# Xóa data trong `/var/lib/ceph`
+ceph-deploy purgedata {host} [{host2} {host3}]
+
+# Xóa data và remove package Ceph
+ceph-deploy purge {host} [{host2} {host3}]
+```
 
 
 ## Restart Service Ceph
