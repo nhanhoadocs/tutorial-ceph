@@ -331,7 +331,7 @@ ceph-deploy mgr create ceph01
 
 - Kiểm tra cài đặt 
 ```sh
-[cephuser@ceph01 ceph-deploy]# ceph -s
+[cephuser@ceph01 ceph-deploy]# sudo ceph -s
 cluster:
     id:     39d1a369-bf54-8907-d49b-490a771ac0e2
     health: HEALTH_OK
@@ -403,7 +403,7 @@ sudo ceph -s
 
 - Kết quả của lệnh trên như sau: 
 ```sh
-cephuser@ceph01:~/my-cluster$ ceph -s
+cephuser@ceph01:~/my-cluster$ sudo ceph -s
 cluster:
     id:     39d1a369-bf54-8907-d49b-490a771ac0e2
     health: HEALTH_OK
