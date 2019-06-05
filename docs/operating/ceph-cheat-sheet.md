@@ -746,70 +746,102 @@ rbd unmap -o force $DEV
 # Cấu hình ceph.conf tham khảo
 ```sh 
 [global]
-# Debug config
-debug lockdep = 0/0
-debug context = 0/0
-debug crush = 0/0
-debug mds = 0/0
-debug mds balancer = 0/0
-debug mds locker = 0/0
-debug mds log = 0/0
-debug mds log expire = 0/0
-debug mds migrator = 0/0
-debug buffer = 0/0
-debug timer = 0/0
-debug filer = 0/0
-debug objecter = 0/0
-debug rados = 0/0
-debug rbd = 0/0
-debug journaler = 0/0
-debug objectcacher = 0/0
-debug client = 0/0
-debug osd = 0/0
-debug optracker = 0/0
-debug objclass = 0/0
-debug filestore = 0/0
-debug journal = 0/0
-debug ms = 0/0
-debug mon = 0/0
-debug monc = 0/0
-debug paxos = 0/0
-debug tp = 0/0
-debug auth = 0/0
-debug finisher = 0/0
-debug heartbeatmap = 0/0
-debug perfcounter = 0/0
-debug rgw = 0/0
-debug hadoop = 0/0
-debug asok = 0/0
-debug throttle = 0/0
-rbd default format = 2
-
+# Requirement Config
 fsid = 7d3f2102-face-4012-a616-372615f2f54f
 mon_initial_members = ceph1
-mon host = 10.10.10.33
+mon_host = 10.10.10.33
 auth_cluster_required = cephx
 auth_service_required = cephx
 auth_client_required = cephx
 
-osd pool default size = 2
-osd pool default min size = 1
-osd crush chooseleaf type = 0
-public network = 10.10.10.0/24
-cluster network = 10.10.14.0/24
-bluestore block db size = 5737418240
-bluestore block wal size = 2737418240
-osd objectstore = bluestore
+# Debug config
+debug_lockdep = 0/0
+debug_context = 0/0
+debug_crush = 0/0
+debug_mds = 0/0
+debug_mds_balancer = 0/0
+debug_mds_locker = 0/0
+debug_mds_log = 0/0
+debug_mds_log_expire = 0/0
+debug_mds_migrator = 0/0
+debug_buffer = 0/0
+debug_timer = 0/0
+debug_filer = 0/0
+debug_objecter = 0/0
+debug_rados = 0/0
+debug_rbd = 0/0
+debug_journaler = 0/0
+debug_objectcacher = 0/0
+debug_client = 0/0
+debug_osd = 0/0
+debug_optracker = 0/0
+debug_objclass = 0/0
+debug_filestore = 0/0
+debug_journal = 0/0
+debug_ms = 0/0
+debug_mon = 0/0
+debug_monc = 0/0
+debug_paxos = 0/0
+debug_tp = 0/0
+debug_auth = 0/0
+debug_finisher = 0/0
+debug_heartbeatmap = 0/0
+debug_perfcounter = 0/0
+debug_rgw = 0/0
+debug_hadoop = 0/0
+debug_asok = 0/0
+debug_throttle = 0/0
+rbd_default_format = 2
+
+# Network
+public_network = 172.16.4.0/24
+cluster_network = 10.0.0.0/24
+
+# Choose a reasonable crush leaf type
+# 0 for a 1-node cluster.
+# 1 for a multi node cluster in a single rack
+# 2 for a multi node, multi chassis cluster with multiple hosts in a chassis
+# 3 for a multi node cluster with hosts across racks, etc.
+osd_crush_chooseleaf_type = 1
+
+# Choose reasonable numbers for number of replicas and placement groups.
+# Write an object 2 times
+osd_pool_default_size = 2
+# Allow writing 1 copy in a degraded state
+osd_pool_default_min_size = 1 
+osd_pool_default_pg_num = 256
+osd_pool_default_pgp_num = 256
+
+# --> Allow delete pool -- NOT RECOMMEND
 mon_allow_pool_delete = false
-rbd_cache = false
-osd pool default pg num = 128
-osd pool default pgp num = 128
 
-[mon.ceph1]
-host = ceph1
-mon addr = 10.10.10.33
+# Journal size Jewel-release 
+# osd journal size             = 20480    ; journal size, in megabytes
 
-[osd]
-osd crush update on start = false
-bluestore = true
+rbd_cache = true
+bluestore_block_db_size = 5737418240
+bluestore_block_wal_size = 2737418240
+
+# Disable auto update crush => Modify Crushmap OSD tree  
+osd_crush_update_on_start = false
+
+# Backfilling and recovery
+osd_max_backfills = 1
+osd_recovery_max_active = 1
+osd_recovery_max_single_start = 1
+osd_recovery_op_priority = 1
+
+# Osd recovery threads = 1
+osd_backfill_scan_max = 16
+osd_backfill_scan_min = 4
+mon_osd_backfillfull_ratio = 0.95
+
+# Scrubbing
+osd_max_scrubs = 1
+osd_scrub_during_recovery = false
+# osd scrub begin hour = 22 
+# osd scrub end hour = 4
+
+# Max PG / OSD
+mon_max_pg_per_osd = 500
 ```
