@@ -229,11 +229,18 @@ dr-xr-xr-x. 18 root root  243 Jan 31 16:29 ..
 -rw-------   1 root root   73 Jan 31 16:31 ceph.mon.keyring
 [cephuser@ceph01 ceph-deploy]#
 ```
-- `ceph.conf` : file config được tự động khởi tạo
-- `ceph-deploy-ceph.log` : file log của toàn bộ thao tác đối với việc sử dụng lệnh `ceph-deploy`
-- `ceph.mon.keyring` : Key monitoring được ceph sinh ra tự động để khởi tạo Cluster
+Trong đó:
+
++ `ceph.conf` : file config được tự động khởi tạo
++ `ceph-deploy-ceph.log` : file log của toàn bộ thao tác đối với việc sử dụng lệnh `ceph-deploy`
++ `ceph.mon.keyring` : Key monitoring được ceph sinh ra tự động để khởi tạo Cluster
+
 
 - Chúng ta sẽ bổ sung thêm vào file `ceph.conf` một vài thông tin cơ bản như sau:
+> Chú ý: Public network là đường Ceph-Com trong file quy hoạch 
+> - Public network là đường Ceph-Com trong file quy hoạch
+> - Cluster network là đường Ceph-Replicate trong file quy hoạch
+
 ```sh
 cat << EOF >> ceph.conf
 osd pool default size = 2
