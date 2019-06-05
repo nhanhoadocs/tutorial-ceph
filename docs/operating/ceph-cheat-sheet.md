@@ -768,6 +768,10 @@ auth_cluster_required = cephx
 auth_service_required = cephx
 auth_client_required = cephx
 
+# Network
+public_network = 172.16.4.0/24
+cluster_network = 10.0.0.0/24
+
 # Debug config
 debug_lockdep = 0/0
 debug_context = 0/0
@@ -806,10 +810,6 @@ debug_hadoop = 0/0
 debug_asok = 0/0
 debug_throttle = 0/0
 rbd_default_format = 2
-
-# Network
-public_network = 172.16.4.0/24
-cluster_network = 10.0.0.0/24
 
 # Choose a reasonable crush leaf type
 # 0 for a 1-node cluster.
