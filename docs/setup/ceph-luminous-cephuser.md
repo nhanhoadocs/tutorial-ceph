@@ -164,13 +164,7 @@ sudo chmod 0440 /etc/sudoers.d/cephuser
 
 ## Cài đặt Ceph 
 
-Các bước ở dưới được thực hiện toàn toàn trên Node `ceph01` và sử dụng `cephuser` để thao tác
-
-- Chuyển qua User `cephuser` để thao tác
-```sh 
-su cephuser
-cd 
-```
+Thực hiện bằng `root` user
 
 - Cài đặt `ceph-deploy`
 ```sh 
@@ -191,6 +185,14 @@ ceph-deploy --version
 >Kết quả như sau là đã cài đặt thành công ceph-deploy
 ```sh 
 2.0.1
+```
+
+Các bước ở dưới được thực hiện toàn toàn trên Node `ceph01` và sử dụng `cephuser` để thao tác
+
+- Chuyển qua User `cephuser` để thao tác
+```sh 
+su cephuser
+cd 
 ```
 
 - Tạo ssh key 
@@ -233,7 +235,7 @@ dr-xr-xr-x. 18 root root  243 Jan 31 16:29 ..
 
 - Chúng ta sẽ bổ sung thêm vào file `ceph.conf` một vài thông tin cơ bản như sau:
 ```sh
-cat << EOF >> /ceph-deploy/ceph.conf
+cat << EOF >> ceph.conf
 osd pool default size = 2
 osd pool default min size = 1
 osd crush chooseleaf type = 0
