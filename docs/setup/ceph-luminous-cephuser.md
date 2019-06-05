@@ -391,6 +391,8 @@ sdb                                                                             
 └─ceph--42804049--4734--4a87--b776--bfad5d382114-osd--data--e6346e12--c312--4ccf--9b5f--0efeb61d0144  253:5    0   39G  0 lvm   /var/lib/ceph/osd/ceph-0
 ```
 
+> Các OSD ở các node khác thực hiện tương tự 
+
 ## Kiểm tra
 Thực hiện trên ceph01
 - Kiểm tra trạng thái của CEPH sau khi cài
