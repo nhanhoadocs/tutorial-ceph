@@ -378,14 +378,14 @@ ceph -s
 - Kết quả của lệnh trên như sau: 
 ```sh
 ceph-deploy@ceph01:~/my-cluster$ ceph -s
-cluster:
-    id:     39d1a369-bf54-8907-d49b-490a771ac0e2
+  cluster:
+    id:     3f59d96e-2725-4b0c-b726-baae012b3928
     health: HEALTH_OK
-
-services:
-    mon: 1 daemons, quorum ceph01
-    mgr: ceph01(active)
-    osd: 3 osds: 3 up, 3 in
+ 
+  services:
+    mon: 1 daemons, quorum ceph01 (age 94m)
+    mgr: ceph01(active, since 5m)
+    osd: 3 osds: 3 up (since 94m), 3 in (since 2h)
 
 data:
     pools:   0 pools, 0 pgs
