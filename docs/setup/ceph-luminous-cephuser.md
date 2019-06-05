@@ -162,7 +162,7 @@ sudo chmod 0440 /etc/sudoers.d/cephuser
 
 > Các server ceph02 và ceph03 thực hiện tương tự
 
-## Cài đặt Ceph 
+## Cài đặt Ceph thực hiện trên Ceph01
 
 Thực hiện bằng `root` user
 
