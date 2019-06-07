@@ -383,6 +383,8 @@ sdb                                                                             
 └─ceph--42804049--4734--4a87--b776--bfad5d382114-osd--data--e6346e12--c312--4ccf--9b5f--0efeb61d0144  253:5    0   39G  0 lvm   /var/lib/ceph/osd/ceph-0
 ```
 
+- Thực hiện thao tác trên tương tự cho ổ `sdc` và `sdd`
+
 - Điều chỉnh Crushmap để có thể Replicate trên OSD thay vì trên HOST 
 ```sh 
 cd /home/cephuser/ceph-deploy/
