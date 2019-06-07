@@ -22,7 +22,9 @@
 
 # Tài liệu cài đặt
 
-[Cài đặt CephAIO bản Luminous](https://github.com/uncelvel/script-ceph-lumi-aio)
+[Cài đặt CephAIO bản Luminous sử dụng scripts](https://github.com/uncelvel/script-ceph-lumi-aio)
+
+[Cài đặt CephAIO bản Luminous manual](docs/setup/ceph-luminous-aio.md)
 
 [Cài đặt Ceph bản Luminous](docs/setup/ceph-luminous.md)
 
