@@ -197,8 +197,6 @@ ssh-keygen
 - Copy ssh key sang các node khác
 ```sh
 ssh-copy-id cephuser@cephaio
-ssh-copy-id cephuser@ceph02
-ssh-copy-id cephuser@ceph03
 ```
 
 - Tạo các thư mục `ceph-deploy` để thao tác cài đặt vận hành Cluster
@@ -256,7 +254,7 @@ EOF
 
 - Cài đặt ceph trên toàn bộ các node ceph
 ```sh
-ceph-deploy install --release luminous cephaio ceph02 ceph03 
+ceph-deploy install --release luminous cephaio
 ```
 
 - Kiểm tra sau khi cài đặt 
