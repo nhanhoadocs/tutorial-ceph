@@ -350,7 +350,7 @@ sudo ceph mgr services
 ```sh 
 http://<ip-cephaio>:7000
 ```
-![](../../images/dashboard-l.png)
+![](../../images/dashboard-l-aio.png)
 
 
 ## Khởi tạo OSD
