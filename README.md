@@ -1,30 +1,30 @@
 # Storage cơ bản 
 
-[Các note ghi chép liên quan đến Storage]()
+[Các note ghi chép liên quan đến Storage](https://github.com/uncelvel/storage)
 
 # Lý thuyết Ceph Storage
 
-[Ceph - Overview]()
+[Ceph - Overview](docs/knowledge_base/ceph-overview.md)
 
-### Các services, thành phần của Ceph
+# Các services, thành phần của Ceph
 
-- [Ceph RADOS]()
-- [Ceph Monitor (ceph-mon)]()
-- [Ceph OSD - Object Storage Device (ceph-osd)]()
-- [Ceph RBD - RADOS Block Device]()
-- [Ceph MDS - Metadata Server (ceph-mds)]()
-- [Ceph Object Gateway(ceph-radosgw)]()
-- [Ceph Manager (ceph-mgr)]()
-- [Thuật toán PAXOS]()
-- [CRUSH]()
-- [Cơ chế xác thực của Ceph]()
-- [Backend lưu trữ của Ceph]()
+- [Ceph RADOS](docs/knowledge_base/ceph-rados.md)
+- [CRUSH](docs/knowledge_base/crush.md)
+- [Ceph Storage Backend](docs/knowledge_base/bluestore_vs_filestore.md)
+- [Ceph MON - Monitor (ceph-mon)](docs/knowledge_base/ceph-mon.md)
+- [Ceph OSD - Object Storage Device (ceph-osd)](docs/knowledge_base/ceph-osd.md)
+- [Ceph RBD - RADOS Block Device](docs/knowledge_base/ceph-rbd.md)
+- [Ceph MDS - Metadata Server (ceph-mds)](docs/knowledge_base/ceph-mds.md)
+- [Ceph RADOSGW - Object Gateway(ceph-radosgw)](docs/knowledge_base/ceph-radosgw.md)
+- [Ceph MGR - Manager (ceph-mgr)](docs/knowledge_base/ceph-mgr.md)
+- [Thuật toán PAXOS](docs/knowledge_base/paxos.md)
+- [Cơ chế xác thực của Ceph](docs/knowledge_base/ceph-authen.md)
 
 # Tài liệu cài đặt
 
 [Cài đặt CephAIO bản Luminous sử dụng scripts](https://github.com/uncelvel/script-ceph-lumi-aio)
 
-[Cài đặt CephAIO bản Luminous manual](docs/setup/ceph-luminous-aio.md)
+[Cài đặt CephAIO bản Luminous manual-cephuser](docs/setup/ceph-luminous-aio.md)
 
 [Cài đặt Ceph bản Luminous-rootuser](docs/setup/ceph-luminous.md)
 
