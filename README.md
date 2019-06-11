@@ -26,11 +26,13 @@
 
 [Cài đặt CephAIO bản Luminous manual](docs/setup/ceph-luminous-aio.md)
 
-[Cài đặt Ceph bản Luminous](docs/setup/ceph-luminous.md)
+[Cài đặt Ceph bản Luminous-root](docs/setup/ceph-luminous.md)
 
-[Cài đặt Ceph bản Mimic](docs/setup/ceph-mimic.md)
+[Cài đặt Ceph bản Luminous-cephuser](docs/setup/ceph-luminous-cephuser.md)
 
-[Cài đặt Ceph bản Nautilus](docs/setup/ceph-nautilus.md)
+[Cài đặt Ceph bản Mimic-root](docs/setup/ceph-mimic.md)
+
+[Cài đặt Ceph bản Nautilus-root](docs/setup/ceph-nautilus.md)
 
 # Tài liệu tích hợp
 
