@@ -42,4 +42,4 @@ Lớp `LibRADOS` là thư viện C cho phép ứng dụng làm việc trực ti�
 
 Tương tác trực tiếp với RADOS Cluster qua thư viện librados giúp tăng hiệu năng của ứng dụng. librados mang lại sự thuận lợi khi cung cấp PaaS và SaaS.
 
-RADOS có 2 thành phần lõi: [Monitor](ceph-mon.md) và [OSD](osd).md)
+RADOS có 2 thành phần lõi: [Monitor](ceph-mon.md) và [OSD](osd.md)
