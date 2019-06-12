@@ -736,6 +736,12 @@ echo "{pool-name}/{images}            id=admin,keyring=/etc/ceph/ceph.client.adm
 sudo modprobe rbd
 rbd feature disable {pool-name}/{images}  exclusive-lock object-map fast-diff deep-flatten
 systemctl start rbdmap && systemctl enable rbdmap
+
+# Bổ sung fstab 
+echo "UUID=bfdf0e00-1d73-4bd9-a43e-32c408dbfdc9 /data ext4 noauto 0 0" >> /etc/fstab
+
+# Nếu là sử dụng lvm thì bổ sung vào lvm.conf
+types = [ "rbd", 1024 ]
 ```
 
 ## Map cephfs trên Client

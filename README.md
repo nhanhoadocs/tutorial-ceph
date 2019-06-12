@@ -19,6 +19,8 @@
 - [Ceph MGR - Manager (ceph-mgr)](docs/knowledge_base/ceph-mgr.md)
 - [Thuật toán PAXOS](docs/knowledge_base/paxos.md)
 - [Cơ chế xác thực của Ceph](docs/knowledge_base/ceph-authen.md)
+- [Các flag của Cluster Ceph](docs/knowledge_base/ceph-flag.md)
+- [Các trạng thái của PG](docs/knowledge_base/ceph-pg-status.md)
 
 # Tài liệu cài đặt
 
@@ -36,7 +38,7 @@
 
 # Tài liệu tích hợp
 
-[Tích hợp Linux Client sử dụng RBD Ceph]()
+[Tích hợp Linux Client sử dụng RBD Ceph](docs/operating/ceph-vs-client-linux.md)
 
 [Sử dụng RGW Ceph]()
 
