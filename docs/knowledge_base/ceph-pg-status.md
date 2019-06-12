@@ -52,7 +52,7 @@ Ngoài ra Ceph còn có các trạng thái khác như sau
 |`backfill_unfound`| PG dừng quá trình backfill vì không đối chiếu kiểm tra được dữ liệu của PG|                                                             |
 |`incomplete`| Hệ thống kiểm tra thấy PG thiếu thông tin về dữ liệu của nó hoặc không có bản sao nào chắc chắn đúng. Cần thử start lại OSD đã hỏng nào có data đúng hoặc giảm `min_size` để cho phép khôi phục|                                                             |
 |`stale`   | Trạng thái không xác định có thể chưa nhận được cập nhật từ lần thay đổi pg_map lần cuối cùng |                                                             |
-|`remapped`| PG được lưu trữ                               | ánh xạ qua 1 vị trí trên OSD khác theo sự chỉ định của CRUSH|
+|`remapped`| PG được lưu trữ ánh xạ qua 1 vị trí trên OSD khác theo sự chỉ định của CRUSH|
 |`undersized`| Có ít bản sao hơn so với cấu hình của pool    |                                                             |
 |`peered`  | Đã chuẩn bị xử lý nhưng chưa phục vụ các thao tác IO của client do ko đủ bản sao theo min_size |                                                             |
 |`snaptrim`| Dọn dẹp bản snapshot                          |                                                             |
