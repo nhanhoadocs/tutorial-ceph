@@ -51,3 +51,5 @@
 [Ceph Cheat sheet](docs/operating/ceph-cheat-sheet.md)
 
 # Benchmark Troubleshooting
+
+[Node Ceph hỏng](docs/operating/ceph-hardware-crash.md)
