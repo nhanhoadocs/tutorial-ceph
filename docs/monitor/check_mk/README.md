@@ -1,13 +1,23 @@
 # Cài đặt check_mk
 
 
+# Bổ sung agent check_mk ceph 
+
+```sh  
+cd /usr/lib/check_mk_agent/plugins
+wget https://raw.githubusercontent.com/uncelvel/tutorial-ceph/master/docs/monitor/check_mk/plugins/ceph
+chmod +x ceph
+./ceph
+```
+
+![](../../../images/monitor/check_mk_ceph.png)
 
 # Bổ sung agent check_mk check disk
 
 ```sh 
 yum install smartmontools -y && sudo apt-get install smartmontools 
 cd /usr/lib/check_mk_agent/plugins
-wget https://raw.githubusercontent.com/nhanhoadocs/scripts/master/Utilities/smart
+wget https://raw.githubusercontent.com/uncelvel/tutorial-ceph/master/docs/monitor/check_mk/plugins/smart
 chmod +x smart
 ./smart
 ```
