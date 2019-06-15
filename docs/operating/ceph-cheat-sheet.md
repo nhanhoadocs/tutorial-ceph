@@ -408,6 +408,11 @@ rbd snap purge {pool-name}/{images}
 rbd export --rbd-concurrent-management-ops 20 --pool={pool-name} {images} {images}.img
 ```
 
+- Import volume 
+```sh 
+rbd import --image-format 2 {images}.img {pool-name}/{images}
+```
+
 ## Các lệnh thao tác đối với Object
 
 - Show toàn bộ pool name 
