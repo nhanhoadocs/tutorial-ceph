@@ -138,9 +138,12 @@ sudo chmod 0640 /etc/ceph/ceph.client.glance.keyring
 ```sh 
 [DEFAULT]
 show_image_direct_url = True
+...
 
 [glance_store]
-#show_image_direct_url = True
+#stores = file,http
+#default_store = file
+#filesystem_store_datadir = /var/lib/glance/images/
 default_store = rbd
 stores = file,http,rbd
 rbd_store_pool = images
@@ -258,7 +261,8 @@ Secret value set
 ```
 
 ### 5.4 Quay lại node Controller
-- Bổ sung cấu hinh `/etc/cinder/cinder.conf` tren cac node controller
+- Bổ sung thêm cấu hinh `/etc/cinder/cinder.conf` tren cac node controller
+> Mục [DEFAULT] bổ sung thêm, Mục [ceph] thêm mới
 ```sh 
 [DEFAULT]
 notification_driver = messagingv2
@@ -380,6 +384,7 @@ Secret value set
 ```
 
 - Chỉnh sửa nova.conf trên COM `/etc/nova/nova.conf`
+> Bổ sung nội dung phần config [libvirt]
 ```sh
 [libvirt]
 images_rbd_pool=vms

@@ -57,7 +57,6 @@ hostnamectl set-hostname cephaio
 - Đặt IP cho các node
 ```sh 
 systemctl disable NetworkManager
-systemctl stop NetworkManager
 systemctl enable network
 systemctl start network
 
