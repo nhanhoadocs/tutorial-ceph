@@ -178,4 +178,50 @@ Truy cập exporter
 <img src="../../images/dashboard-n/Ip_planning.png">
 </p>
 
-Cài đặt Grafana [tại đây]()
+Cài đặt Grafana [TẠI ĐÂY](https://github.com/uncelvel/monitor/blob/master/grafana/docs/install.md)
+
+
+Login vào Grafana và chọn `Add datasource` 
+<p align="center">
+<img src="../../images/dashboard-n/grafana01.png">
+</p>
+
+Chọn Datasource là `Prometheus`
+<p align="center">
+<img src="../../images/dashboard-n/grafana02.png">
+</p>
+
+Điền thông tin exporter Prometheus của node Ceph và chọn `Save & Test`
+<p align="center">
+<img src="../../images/dashboard-n/grafana03.png">
+</p>
+
+Hoàn tất add Datasource 
+<p align="center">
+<img src="../../images/dashboard-n/grafana04.png">
+</p>
+
+Đăng nhập SSH vào node Grafana và cài đặt thêm Plugins
+```sh 
+grafana-cli plugins install vonage-status-panel
+grafana-cli plugins install grafana-piechart-panel
+```
+<p align="center">
+<img src="../../images/dashboard-n/grafana05.png">
+</p>
+
+Clone các file json cấu hình Dashboard từ trang chủ 
+```sh 
+https://github.com/ceph/ceph/tree/master/monitoring/grafana/dashboards
+```
+
+Quay lại Grafana Dashboard tiến hành import cấu hình Dashboard
+<p align="center">
+<img src="../../images/dashboard-n/grafana06.png">
+</p>
+
+
+
+## Tài liệu tham khảo 
+
+http://docs.ceph.com/docs/nautilus/mgr/dashboard/#enabling-the-embedding-of-grafana-dashboards
