@@ -180,6 +180,14 @@ Truy cập exporter
 
 Cài đặt Grafana [TẠI ĐÂY](https://github.com/uncelvel/monitor/blob/master/grafana/docs/install.md)
 
+Cấu hình trên node Ceph để 
+```sh 
+ceph dashboard set-grafana-api-url http://192.168.80.77:3000
+```
+<p align="center">
+<img src="../../images/dashboard-n/grafana08.png">
+</p>
+
 
 Login vào Grafana và chọn `Add datasource` 
 <p align="center">
@@ -210,6 +218,23 @@ grafana-cli plugins install grafana-piechart-panel
 <img src="../../images/dashboard-n/grafana05.png">
 </p>
 
+
+Cấu hình `/etc/grafana/grafana.ini` bật chế độ `anonymous`
+```sh
+[auth.anonymous]
+enabled = true
+org_name = Main Org.
+org_role = Viewer
+```
+<p align="center">
+<img src="../../images/dashboard-n/grafana07.png">
+</p>
+
+Restart grafana-server 
+```sh 
+systemctl restart grafana-server
+```
+
 Clone các file json cấu hình Dashboard từ trang chủ 
 ```sh 
 https://github.com/ceph/ceph/tree/master/monitoring/grafana/dashboards
@@ -221,7 +246,15 @@ Quay lại Grafana Dashboard tiến hành import cấu hình Dashboard
 </p>
 
 
+Templating init failed{"err":{"data":null,"status":-1,"config":{"method":"GET","transformRequest":[null],"transformResponse":[null],"jsonpCallbackParam":"callback","silent":true,"url":"http://192.168.80.76:9283/api/v1/series?match[]=ceph_health_status&start=1561929086&end=1561950686","headers":{"Accept":"application/json, text/plain, */*"},"retry":0},"statusText":"","xhrStatus":"error"},"cancelled":true}
 
 ## Tài liệu tham khảo 
 
 http://docs.ceph.com/docs/nautilus/mgr/dashboard/#enabling-the-embedding-of-grafana-dashboards
+
+
+ACC015642
+103.101.160.82
+
+
+103.28.39.217

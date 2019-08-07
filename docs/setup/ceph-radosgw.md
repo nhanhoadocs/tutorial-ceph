@@ -1,670 +1,561 @@
 # Ceph Object Storage - Ceph RadosGW 
 
-## Chuẩn bị và môi trường LAB (2 Node)
+## Cài đặt mô hình 
 
-- OS
-- CentOS7 - 64 bit
-- 03: HDD, trong đó:
-- `sda`: sử dụng để cài OS
-- `sdb`,`sdc`,: sử dụng làm OSD (nơi chứa dữ liệu)
-- 03 NICs: 
-- `eth0`: dùng để ssh và tải gói cài đặt
-- `eth1`: dùng để các trao đổi thông tin giữa các node Ceph, cũng là đường Client kết nối vào
-- `eth2`: dùng để đồng bộ dữ liệu giữa các OSD
+Cài đặt theo [tài liệu](ceph-nautilus.md)
 
-- Host `cephaio` cài đặt `ceph-deploy`, `ceph-mon`,` ceph-osd`, `ceph-mgr`, `ceph-osd`
-
-- Phiên bản cài đặt : Ceph luminous
-
-- Mục tiêu: Tạo 1 node Ceph cung cấp dịch vụ Object và sử dụng Client kết nối vào
-
-## Mô hình 
-- Sử dụng mô hình
-
-![](../../images/topo-aio.png)
-
-
-## IP Planning
-- Phân hoạch IP cho các máy chủ trong mô hình trên
-
-![](../../images/ip-planning1.png)
-
-
-## Các bước chuẩn bị trên từng Server
-
-- Cài đặt NTPD 
-```sh 
-yum install chrony -y 
-```
-
-- Enable NTPD 
-```sh 
-systemctl start chronyd 
-systemctl enable chronyd 
-```
-
-- Kiểm tra chronyd hoạt động 
-```sh 
-chronyc sources -v 
-```
-
-- Đặt hostname
-```sh
-hostnamectl set-hostname cephaio
-```
-
-- Đặt IP cho các node
-```sh 
-systemctl disable NetworkManager
-systemctl enable network
-systemctl start network
-
-echo "Setup IP eth0"
-nmcli c modify eth0 ipv4.addresses 10.10.10.69/24
-nmcli c modify eth0 ipv4.gateway 10.10.10.1
-nmcli c modify eth0 ipv4.dns 8.8.8.8
-nmcli c modify eth0 ipv4.method manual
-nmcli con mod eth0 connection.autoconnect yes
-
-echo "Setup IP eth1"
-nmcli c modify eth1 ipv4.addresses 10.10.13.69/24
-nmcli c modify eth1 ipv4.method manual
-nmcli con mod eth1 connection.autoconnect yes
-
-echo "Setup IP eth2"
-nmcli c modify eth2 ipv4.addresses 10.10.14.69/24
-nmcli c modify eth2 ipv4.method manual
-nmcli con mod eth2 connection.autoconnect yes
-```
-
-- Cài đặt epel-relese và update OS 
-```sh
-yum install epel-release -y
-yum update -y
-```
-
-- Cài đặt CMD_log 
-```sh 
-curl -Lso- https://raw.githubusercontent.com/nhanhoadocs/scripts/master/Utilities/cmdlog.sh | bash
-```
-
-- Vô hiệu hóa Selinux
-```sh
-setenforce 0
-sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux
-```
-
-- Mở port cho Ceph trên Firewalld  
-```sh 
-#ceph-admin
-systemctl start firewalld
-systemctl enable firewalld
-sudo firewall-cmd --zone=public --add-port=80/tcp --permanent
-sudo firewall-cmd --zone=public --add-port=2003/tcp --permanent
-sudo firewall-cmd --zone=public --add-port=4505-4506/tcp --permanent
-sudo firewall-cmd --reload
-
-# mon
-sudo systemctl start firewalld
-sudo systemctl enable firewalld
-sudo firewall-cmd --zone=public --add-port=6789/tcp --permanent
-sudo firewall-cmd --reload
-
-# osd
-sudo systemctl start firewalld
-sudo systemctl enable firewalld
-sudo firewall-cmd --zone=public --add-port=6800-7300/tcp --permanent
-sudo firewall-cmd --reload
-```
-
-- Hoặc có thể disable firewall 
-```sh 
-sudo systemctl disable firewalld
-sudo systemctl stop firewalld
-```
-
-- Bổ sung file hosts
-```sh
-cat << EOF >> /etc/hosts
-10.10.13.69 cephaio
-EOF
-```
-> Lưu ý network setup trong /etc/hosts chính là đường `eth1` dùng để các trao đổi thông tin giữa các node Ceph, cũng là đường Client kết nối vào
-
-- Kiểm tra kết nối
-```sh 
-ping -c 10 cephaio
-```
-
-- Khởi động lại máy
-```sh
-init 6
-```
-
-## Cài đặt Ceph 
-
-Các bước ở dưới được thực hiện toàn toàn trên Node `cephaio`
-
-- Cài đặt `ceph-deploy`
-```sh 
-yum install -y wget 
-wget https://download.ceph.com/rpm-luminous/el7/noarch/ceph-deploy-2.0.1-0.noarch.rpm --no-check-certificate
-rpm -ivh ceph-deploy-2.0.1-0.noarch.rpm
-```
-
-- Cài đặt `python-setuptools` để `ceph-deploy` có thể hoạt động ổn định
-```sh 
-curl https://bootstrap.pypa.io/ez_setup.py | python
-```
-
-- Kiểm tra cài đặt 
-```sh 
-ceph-deploy --version
-```
->Kết quả như sau là đã cài đặt thành công ceph-deploy
-```sh 
-2.0.1
-```
-
-- Tạo ssh key 
-```sh
-ssh-keygen
-```
-> Bấm ENTER khi có requirement 
-
-- Copy ssh key sang các node khác
-```sh
-ssh-copy-id root@cephaio
-```
-
-- Tạo các thư mục `ceph-deploy` để thao tác cài đặt vận hành Cluster
-```sh
-mkdir /ceph-deploy && cd /ceph-deploy
-```
-
-- Khởi tại file cấu hình cho cụm với node quản lý là `cephaio`
-```sh
-ceph-deploy new cephaio
-```
-
-- Kiểm tra lại thông tin folder `ceph-deploy`
-```sh 
-[root@cephaio ceph-deploy]# ls -lah
-total 12K
-drwxr-xr-x   2 root root   75 Jan 31 16:31 .
-dr-xr-xr-x. 18 root root  243 Jan 31 16:29 ..
--rw-r--r--   1 root root 2.9K Jan 31 16:31 ceph-deploy-ceph.log
--rw-r--r--   1 root root  195 Jan 31 16:31 ceph.conf
--rw-------   1 root root   73 Jan 31 16:31 ceph.mon.keyring
-[root@cephaio ceph-deploy]#
-```
-- `ceph.conf` : file config được tự động khởi tạo
-- `ceph-deploy-ceph.log` : file log của toàn bộ thao tác đối với việc sử dụng lệnh `ceph-deploy`
-- `ceph.mon.keyring` : Key monitoring được ceph sinh ra tự động để khởi tạo Cluster
-
-- Chúng ta sẽ bổ sung thêm vào file `ceph.conf` một vài thông tin cơ bản như sau:
-```sh
-cat << EOF >> /ceph-deploy/ceph.conf
-osd pool default size = 2
-osd pool default min size = 1
-osd pool default pg num = 128
-osd pool default pgp num = 128
-
-osd crush chooseleaf type = 1
-
-public network = 10.10.13.0/24
-cluster network = 10.10.14.0/24
-
-mon_max_pg_per_osd = 500
-EOF
-```
-- Bổ sung thêm định nghĩa 
-    + `public network` : Đường trao đổi thông tin giữa các node Ceph và cũng là đường client kết nối vào 
-    + `cluster network` : Đường đồng bộ dữ liệu
-- Bổ sung thêm `default size replicate`
-- Bổ sung thêm `default pg num`
-
-
-- Cài đặt ceph trên toàn bộ các node ceph
-```sh
-ceph-deploy install --release luminous cephaio
-```
-
-- Kiểm tra sau khi cài đặt 
-```sh 
-ceph -v 
-```
-> Kết quả như sau là đã cài đặt thành công ceph trên node 
-```sh 
-ceph version 12.2.9 (9e300932ef8a8916fb3fda78c58691a6ab0f4217) luminous (stable)
-```
-
-- Khởi tạo cluster với các node `mon` (Monitor-quản lý) dựa trên file `ceph.conf`
-```sh
-ceph-deploy mon create-initial
-```
-
-- Sau khi thực hiện lệnh phía trên sẽ sinh thêm ra 05 file : `ceph.bootstrap-mds.keyring`, `ceph.bootstrap-mgr.keyring`, `ceph.bootstrap-osd.keyring`, `ceph.client.admin.keyring` và `ceph.bootstrap-rgw.keyring`. Quan sát bằng lệnh `ll -alh`
-
-```sh
-[root@cephaio ceph-deploy]# ls -lah
-total 348K
-drwxr-xr-x   2 root root  244 Feb  1 11:40 .
-dr-xr-xr-x. 18 root root  243 Feb  1 11:29 ..
--rw-r--r--   1 root root 258K Feb  1 11:40 ceph-deploy-ceph.log
--rw-------   1 root root  113 Feb  1 11:40 ceph.bootstrap-mds.keyring
--rw-------   1 root root  113 Feb  1 11:40 ceph.bootstrap-mgr.keyring
--rw-------   1 root root  113 Feb  1 11:40 ceph.bootstrap-osd.keyring
--rw-------   1 root root  113 Feb  1 11:40 ceph.bootstrap-rgw.keyring
--rw-------   1 root root  151 Feb  1 11:40 ceph.client.admin.keyring
--rw-r--r--   1 root root  195 Feb  1 11:29 ceph.conf
--rw-------   1 root root   73 Feb  1 11:29 ceph.mon.keyring
-```
-
-- Để node `cephaio` có thể thao tác với cluster chúng ta cần gán cho node `cephaio` với quyền admin bằng cách bổ sung cho node này `admin.keying`
-```sh  
-ceph-deploy admin cephaio
-```
-> Kiểm tra bằng lệnh 
-```sh
-[root@cephaio ceph-deploy]# ceph -s
-cluster:
-    id:     39d1a369-bf54-8907-d49b-490a771ac0e2
-    health: HEALTH_OK
-
-services:
-    mon: 1 daemons, quorum cephaio
-    mgr: no daemons active
-    osd: 0 osds: 0 up, 0 in
-
-data:
-    pools:   0 pools, 0 pgs
-    objects: 0  objects, 0 B
-    usage:   0 B used, 0 B / 0 B avail
-    pgs:
-```
-
-## Khởi tạo MGR
-
-Ceph-mgr là thành phần cài đặt yêu cầu cần khởi tạo từ bản Luminous, có thể cài đặt trên nhiều node hoạt động theo cơ chế `Active-Passive`
-
-- Cài đặt ceph-mgr trên cephaio
-```sh
-ceph-deploy mgr create cephaio
-```
-
-- Kiểm tra cài đặt 
-```sh
-[root@cephaio ceph-deploy]# ceph -s
-cluster:
-    id:     39d1a369-bf54-8907-d49b-490a771ac0e2
-    health: HEALTH_OK
-
-services:
-    mon: 1 daemons, quorum cephaio
-    mgr: cephaio(active)
-    osd: 0 osds: 0 up, 0 in
-
-    data:
-    pools:   0 pools, 0 pgs
-    objects: 0  objects, 0 B
-    usage:   0 B used, 0 B / 0 B avail
-    pgs:
-```
-
-- Ceph-mgr hỗ trợ dashboard để quan sát trạng thái của cluster, Enable mgr dashboard trên host cephaio
-
-```sh
-ceph mgr module enable dashboard
-ceph mgr services
-```
-
-- Truy cập vào mgr dashboard với username và password vừa đặt ở phía trên để kiểm tra
-```sh 
-https://<ip-cephaio>:7000
-```
-![](../../images/dashboard-l.png)
-
-
-## Khởi tạo OSD
-
-Tạo OSD thông qua ceph-deploy tại host cephaio
-
-- Trên cephaio, dùng ceph-deploy để partition ổ cứng OSD, thay `cephaio` bằng hostname của host chứa OSD
-```sh
-ceph-deploy disk zap cephaio /dev/sdb
-```
-
-- Tạo OSD với ceph-deploy
-```sh
-ceph-deploy osd create --data /dev/sdb cephaio
-``` 
-
-- Kiểm tra osd vừa tạo bằng lệnh
-```sh
-ceph osd tree
-``` 
-
-- Kiểm tra ID của OSD bằng lệnh
-```sh
-lsblk
-```
-
-Kết quả:
-```sh
-sdb                                                                                                     8:112  0   39G  0 disk  
-└─ceph--42804049--4734--4a87--b776--bfad5d382114-osd--data--e6346e12--c312--4ccf--9b5f--0efeb61d0144  253:5    0   39G  0 lvm   /var/lib/ceph/osd/ceph-0
-```
-
-## Kiểm tra
-Thực hiện trên cephaio
-- Kiểm tra trạng thái của CEPH sau khi cài
-```sh
-ceph -s
-```
-
-- Kết quả của lệnh trên như sau: 
-```sh
-ceph-deploy@cephaio:~/my-cluster$ ceph -s
-cluster:
-    id:     39d1a369-bf54-8907-d49b-490a771ac0e2
-    health: HEALTH_OK
-
-services:
-    mon: 1 daemons, quorum cephaio
-    mgr: cephaio(active)
-    osd: 2 osds: 2 up, 2 in
-
-data:
-    pools:   0 pools, 0 pgs
-    objects: 0 objects, 0 bytes
-    usage:   3180 MB used, 116 GB / 119 GB avail
-    pgs:     
-```
-
-- Nếu có dòng `health HEALTH_OK` thì việc cài đặt đã ok.
-
-- Kiểm tra rule và OSD đảm bảo việc replicate trên HOST
-```sh
-[root@cephaio ~]# ceph osd crush rule dump
-[
-    {
-        "rule_id": 0,
-        "rule_name": "replicated_rule",
-        "ruleset": 0,
-        "type": 1,
-        "min_size": 1,
-        "max_size": 10,
-        "steps": [
-            {
-                "op": "take",
-                "item": -1,
-                "item_name": "default"
-            },
-            {
-                "op": "choose_firstn",
-                "num": 0,
-                "type": "osd"
-            },
-            {
-                "op": "emit"
-            }
-        ]
-    }
-]
-
-[root@cephaio ~]# 
-```
-
-
-Dump và chỉnh sửa crushmap
-```sh
-ceph osd getcrushmap -o crushmap
-crushtool -d crushmap -o crushmap.decom
-sed -i 's|step choose firstn 0 type osd|step chooseleaf firstn 0 type osd|g' crushmap.decom
-crushtool -c crushmap.decom -o crushmap.new
-ceph osd setcrushmap -i crushmap.new
-```
-
-Kiểm tra lại rules 
-```sh
-[root@cephaio ceph-deploy]# ceph osd crush rule dump
-[
-    {
-        "rule_id": 0,
-        "rule_name": "replicated_rule",
-        "ruleset": 0,
-        "type": 1,
-        "min_size": 1,
-        "max_size": 10,
-        "steps": [
-            {
-                "op": "take",
-                "item": -1,
-                "item_name": "default"
-            },
-            {
-                "op": "chooseleaf_firstn",
-                "num": 0,
-                "type": "osd"
-            },
-            {
-                "op": "emit"
-            }
-        ]
-    }
-]
-
-[root@cephaio ceph-deploy]# 
-```
-
-# Create pool 
-Truy cập trang ceph.com/pgcalc để tính toán create các pool 
-![](http://i.imgur.com/suH6zuL.png)
-
-```
-## Note: The 'while' loops below pause between pools to allow all
-##       PGs to be created.  This is a safety mechanism to prevent
-##       saturating the Monitor nodes.
-## -------------------------------------------------------------------
-
-ceph osd pool create .rgw.root 2
-ceph osd pool set .rgw.root size 2
-while [ $(ceph -s | grep creating -c) -gt 0 ]; do echo -n .;sleep 1; done
-
-ceph osd pool create default.rgw.control 2
-ceph osd pool set default.rgw.control size 2
-while [ $(ceph -s | grep creating -c) -gt 0 ]; do echo -n .;sleep 1; done
-
-ceph osd pool create default.rgw.data.root 2
-ceph osd pool set default.rgw.data.root size 2
-while [ $(ceph -s | grep creating -c) -gt 0 ]; do echo -n .;sleep 1; done
-
-ceph osd pool create default.rgw.gc 2
-ceph osd pool set default.rgw.gc size 2
-while [ $(ceph -s | grep creating -c) -gt 0 ]; do echo -n .;sleep 1; done
-
-ceph osd pool create default.rgw.log 2
-ceph osd pool set default.rgw.log size 2
-while [ $(ceph -s | grep creating -c) -gt 0 ]; do echo -n .;sleep 1; done
-
-ceph osd pool create default.rgw.intent-log 2
-ceph osd pool set default.rgw.intent-log size 2
-while [ $(ceph -s | grep creating -c) -gt 0 ]; do echo -n .;sleep 1; done
-
-ceph osd pool create default.rgw.meta 2
-ceph osd pool set default.rgw.meta size 2
-while [ $(ceph -s | grep creating -c) -gt 0 ]; do echo -n .;sleep 1; done
-
-ceph osd pool create default.rgw.usage 2
-ceph osd pool set default.rgw.usage size 2
-while [ $(ceph -s | grep creating -c) -gt 0 ]; do echo -n .;sleep 1; done
-
-ceph osd pool create default.rgw.users.keys 2
-ceph osd pool set default.rgw.users.keys size 2
-while [ $(ceph -s | grep creating -c) -gt 0 ]; do echo -n .;sleep 1; done
-
-ceph osd pool create default.rgw.users.email 2
-ceph osd pool set default.rgw.users.email size 2
-while [ $(ceph -s | grep creating -c) -gt 0 ]; do echo -n .;sleep 1; done
-
-ceph osd pool create default.rgw.users.swift 2
-ceph osd pool set default.rgw.users.swift size 2
-while [ $(ceph -s | grep creating -c) -gt 0 ]; do echo -n .;sleep 1; done
-
-ceph osd pool create default.rgw.users.uid 2
-ceph osd pool set default.rgw.users.uid size 2
-while [ $(ceph -s | grep creating -c) -gt 0 ]; do echo -n .;sleep 1; done
-
-ceph osd pool create default.rgw.buckets.extra 2
-ceph osd pool set default.rgw.buckets.extra size 2
-while [ $(ceph -s | grep creating -c) -gt 0 ]; do echo -n .;sleep 1; done
-
-ceph osd pool create default.rgw.buckets.index 8
-ceph osd pool set default.rgw.buckets.index size 2
-while [ $(ceph -s | grep creating -c) -gt 0 ]; do echo -n .;sleep 1; done
-
-ceph osd pool create default.rgw.buckets.data 256
-ceph osd pool set default.rgw.buckets.data size 2
-while [ $(ceph -s | grep creating -c) -gt 0 ]; do echo -n .;sleep 1; done
-```
-
-Kiểm tra các pool được tạo
-```sh 
-[root@cephaio ~]# ceph df 
-GLOBAL:
-    SIZE        AVAIL       RAW USED     %RAW USED 
-    40.0GiB     38.0GiB      2.01GiB          5.03 
-POOLS:
-    NAME                          ID     USED     %USED     MAX AVAIL     OBJECTS 
-    .rgw.root                     1        0B         0       18.0GiB           0 
-    default.rgw.control           2        0B         0       18.0GiB           0 
-    default.rgw.data.root         3        0B         0       18.0GiB           0 
-    default.rgw.gc                4        0B         0       18.0GiB           0 
-    default.rgw.log               5        0B         0       18.0GiB           0 
-    default.rgw.intent-log        6        0B         0       18.0GiB           0 
-    default.rgw.meta              7        0B         0       18.0GiB           0 
-    default.rgw.usage             8        0B         0       18.0GiB           0 
-    default.rgw.users.keys        9        0B         0       18.0GiB           0 
-    default.rgw.users.email       10       0B         0       18.0GiB           0 
-    default.rgw.users.swift       11       0B         0       18.0GiB           0 
-    default.rgw.users.uid         12       0B         0       18.0GiB           0 
-    default.rgw.buckets.extra     13       0B         0       18.0GiB           0 
-    default.rgw.buckets.index     14       0B         0       18.0GiB           0 
-    default.rgw.buckets.data      15       0B         0       18.0GiB           0 
-[root@cephaio ~]# 
-```
-Kiểm tra 
-![](http://i.imgur.com/GHoIufT.png)
-
-Hoặc kiểm tra trên Terminal 
-
-Chưa OK 
-![](http://i.imgur.com/xd2pbK0.png)
-
-Khởi động lại 
-
-OK 
-![](http://i.imgur.com/7hEdD2r.png)
-
-
-> Yêu cầu phải nếu trên cùng 1 host
-```sh 
-                "op": "chooseleaf_firstn",
-                "num": 0,
-                "type": "osd"
-```
-
-Cài đặt Ceph RadosGW 
+## Cài đặt Ceph RadosGW 
 http://docs.ceph.com/docs/mimic/install/install-ceph-gateway/
 
 
-Khởi tạo node `rgw`
+Khởi tạo node `rgw` trên cả 3 node ceph 
 ```sh 
 cd /ceph-deploy
-ceph-deploy install --rgw cephaio 
+ceph-deploy install --rgw ceph01 ceph02 ceph03
+ceph-deploy rgw create ceph01 ceph02 ceph03 
 ```
 
-> 2019-05-22 Stable RadosGW 
+Ceph Object Gateway được chạy trên Civetweb (được tích hợp sẵn trong ceph-radosgw daemon) bao gồm Apache và FastCGI. Civetweb của RGW chạy dưới port 7480
+
+Cài đặt net-tools 
 ```sh 
-[ceph_deploy.install][DEBUG ] Installing stable version mimic on cluster ceph hosts cephaio
+yum install net-tools -y
 ```
 
-```
-[cephaio][INFO  ] Running command: ceph --version
-[cephaio][DEBUG ] ceph version 13.2.5 (cbff874f9007f1869bfd3821b7e33b2a6ffd4988) mimic (stable)
+Kiểm tra trên tất cả các node:
+```sh 
+[root@ceph01 ~]# netstat -tnlp | grep 7480
+tcp        0      0 0.0.0.0:7480            0.0.0.0:*               LISTEN      14030/radosgw       
+[root@ceph01 ~]#
 ```
 
+Kiểm tra pool default 
+```sh 
+[root@ceph01 ~]# ceph df 
+RAW STORAGE:
+    CLASS     SIZE        AVAIL       USED       RAW USED     %RAW USED 
+    hdd       174 GiB     168 GiB     29 MiB      6.0 GiB          3.46 
+    TOTAL     174 GiB     168 GiB     29 MiB      6.0 GiB          3.46 
+ 
+POOLS:
+    POOL          ID     STORED     OBJECTS     USED     %USED     MAX AVAIL 
+    .rgw.root      1        0 B           0      0 B         0        80 GiB 
+[root@ceph01 ~]# 
+```
+
+![](http://i.imgur.com/4s8ua9j.png)
+
+## Cấu hình index pool sử dụng SSD nhằm tăng tốc độ truy vấn
+
+Các bước thực hiện 
+- Xóa pool `.rgw.root` mặc định 
+- Tạo các pool cho RGW theo ceph.com/pgcalc
+- Chỉnh sửa config `crush_update_on_start = false`
+- Bổ sung thêm disk, tạo mới OSD giả lập ssd bằng cách chỉnh class (Môi trường lab)
+- Tạo rules cho các disk SSD 
+- Di chuyển pool `default.rgw.buckets.index` sang SSD 
+- Hoàn tất 
+
+Bổ sung config cho phép xóa pool 
+```sh 
+cat << EOF >> ceph.conf
+
+mon_allow_pool_delete = true
+EOF
+```
+
+Push config sang các node 
+```sh 
+ceph-deploy --overwrite-conf config push ceph01 ceph02 ceph03
+```
+
+Thực hiện restart lại ceph-mon service trên toàn bộ các node 
+```sh 
+systemctl restart ceph-mon@$(hostname)
+```
+> Lưu ý thao tác restart này cần thực hiện trên toàn bộ các Node
+
+Xoá pool `.rgw.root`
+```sh 
+ceph osd pool delete .rgw.root .rgw.root --yes-i-really-really-mean-it
+```
+
+Kiểm tra các OSD hiện có 
+```sh 
+[root@ceph01 ceph-deploy]# ceph osd tree 
+ID CLASS WEIGHT  TYPE NAME       STATUS REWEIGHT PRI-AFF 
+-1       0.16974 root default                            
+-3       0.05658     host ceph01                         
+ 0   hdd 0.02829         osd.0       up  1.00000 1.00000 
+ 1   hdd 0.02829         osd.1       up  1.00000 1.00000 
+-5       0.05658     host ceph02                         
+ 2   hdd 0.02829         osd.2       up  1.00000 1.00000 
+ 3   hdd 0.02829         osd.3       up  1.00000 1.00000 
+-7       0.05658     host ceph03                         
+ 4   hdd 0.02829         osd.4       up  1.00000 1.00000 
+ 5   hdd 0.02829         osd.5       up  1.00000 1.00000 
+```
+
+Tạo pool dựa theo https://ceph.com/pgcalc
+![](http://i.imgur.com/6DmonQz.png)
+```sh 
+e
+```
+
+Bổ sung config không cho phép tự động cập nhật crushmap
+```sh 
+cat << EOF >> ceph.conf
+
+osd_crush_update_on_start = false
+EOF
+```
+
+Push config sang các node 
+```sh 
+ceph-deploy --overwrite-conf config push ceph01 ceph02 ceph03
+```
+
+Thực hiện restart lại ceph-mon service trên toàn bộ các node 
+```sh 
+systemctl restart ceph-mon@$(hostname)
+```
+> Lưu ý thao tác restart này cần thực hiện trên toàn bộ các Node
+
+Kiểm tra disk `/dev/vdd` là ổ SSD sử dụng cho `index pool` trên cả 3 node 
+```sh 
+[root@ceph01 ceph-deploy]# lsblk 
+NAME                                                           MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sr0                                                             11:0    1 1024M  0 rom  
+vda                                                            253:0    0   30G  0 disk 
+└─vda1                                                         253:1    0   30G  0 part /
+vdb                                                            253:16   0   30G  0 disk 
+└─ceph--8baf95af--6fba--4e29--b44d--55746f410d2e-osd--block--4b88cc49--1bad--415b--b904--ab41e0827313
+                                                               252:1    0   29G  0 lvm  
+vdc                                                            253:32   0   30G  0 disk 
+└─ceph--03f23ab3--15ae--41d6--ae88--a0c7915dc354-osd--block--8945f962--71b4--482a--9aa3--8d53a166443b
+                                                               252:0    0   29G  0 lvm  
+vdd                                                            253:48   0   30G  0 disk 
+```
+
+Tạo mới OSD
+```sh 
+ceph-deploy disk zap ceph01 /dev/vdd
+ceph-deploy disk zap ceph02 /dev/vdd
+ceph-deploy disk zap ceph03 /dev/vdd
+ceph-deploy osd create --data /dev/vdd ceph01
+ceph-deploy osd create --data /dev/vdd ceph02
+ceph-deploy osd create --data /dev/vdd ceph03
+```
+
+Kiểm tra các OSD mới tạo 
 ```sh
-[root@cephaio ceph-deploy]# ceph -s 
-  cluster:
-    id:     7341daaf-82e4-4de0-bf90-3f6616cb415d
-    health: HEALTH_OK
- 
-  services:
-    mon: 1 daemons, quorum cephaio
-    mgr: cephaio(active)
-    osd: 2 osds: 2 up, 2 in
- 
-  data:
-    pools:   15 pools, 290 pgs
-    objects: 0 objects, 0B
-    usage:   2.01GiB used, 38.0GiB / 40.0GiB avail
-    pgs:     290 active+clean
- 
-[root@cephaio ceph-deploy]#
+[root@ceph01 ~]# ceph osd tree 
+ID CLASS WEIGHT  TYPE NAME       STATUS REWEIGHT PRI-AFF 
+-1       0.16974 root default                            
+-3       0.05658     host ceph01                         
+ 0   hdd 0.02829         osd.0     down  1.00000 1.00000 
+ 1   hdd 0.02829         osd.1     down  1.00000 1.00000 
+-5       0.05658     host ceph02                         
+ 2   hdd 0.02829         osd.2     down  1.00000 1.00000 
+ 3   hdd 0.02829         osd.3     down  1.00000 1.00000 
+-7       0.05658     host ceph03                         
+ 4   hdd 0.02829         osd.4     down  1.00000 1.00000 
+ 5   hdd 0.02829         osd.5     down  1.00000 1.00000 
+ 6   hdd       0 osd.6               up  1.00000 1.00000 
+ 7   hdd       0 osd.7               up  1.00000 1.00000 
+ 8   hdd       0 osd.8               up  1.00000 1.00000 
+[root@ceph01 ~]# 
 ```
 
-```
-[root@cephaio ceph-deploy]# ceph -s 
-  cluster:
-    id:     7341daaf-82e4-4de0-bf90-3f6616cb415d
-    health: HEALTH_OK
- 
-  services:
-    mon: 1 daemons, quorum cephaio
-    mgr: cephaio(active)
-    osd: 2 osds: 2 up, 2 in
- 
-  data:
-    pools:   0 pools, 0 pgs
-    objects: 0 objects, 0B
-    usage:   2.00GiB used, 38.0GiB / 40.0GiB avail
-    pgs:     
- 
-[root@cephaio ceph-deploy]# ceph mgr services 
-{
-    "dashboard": "http://cephaio:7000/"
-}
-[root@cephaio ceph-deploy]# init 6 
-```
-
-Khởi động lại node 
-
-
-Enable lại dashboard
+Thay đổi CLASS của disk giả lập SSD
 ```sh 
-ceph mgr module enable dashboard
-ceph dashboard create-self-signed-cert
-ceph dashboard set-login-credentials <username> <password>
-ceph mgr services
+ceph osd crush rm-device-class osd.6
+ceph osd crush rm-device-class osd.7
+ceph osd crush rm-device-class osd.8
+ceph osd crush set-device-class ssd osd.6
+ceph osd crush set-device-class ssd osd.7
+ceph osd crush set-device-class ssd osd.8
 ```
 
-Kiểm tra dashboard
+Kiểm tra class sau khi tạo mới 
 ```sh 
-[root@cephaio ~]# systemctl restart ceph-mgr@cephaio 
-[root@cephaio ~]# ceph mgr services
-{}
-[root@cephaio ~]# ceph mgr services
-{
-    "dashboard": "https://cephaio:8443/"
-}
-[root@cephaio ~]# 
+[root@ceph01 ~]# ceph osd tree 
+ID CLASS WEIGHT  TYPE NAME       STATUS REWEIGHT PRI-AFF 
+-1       0.16974 root default                            
+-3       0.05658     host ceph01                         
+ 0   hdd 0.02829         osd.0     down  1.00000 1.00000 
+ 1   hdd 0.02829         osd.1     down  1.00000 1.00000 
+-5       0.05658     host ceph02                         
+ 2   hdd 0.02829         osd.2     down  1.00000 1.00000 
+ 3   hdd 0.02829         osd.3     down  1.00000 1.00000 
+-7       0.05658     host ceph03                         
+ 4   hdd 0.02829         osd.4     down  1.00000 1.00000 
+ 5   hdd 0.02829         osd.5     down  1.00000 1.00000 
+ 6   ssd       0 osd.6               up  1.00000 1.00000 
+ 7   ssd       0 osd.7               up  1.00000 1.00000 
+ 8   ssd       0 osd.8               up  1.00000 1.00000 
 ```
 
-Kết nối Client Ceph 
-http://lists.ceph.com/pipermail/ceph-users-ceph.com/2013-May/020776.html
+Kiểm tra các rule hiện có 
+```sh 
+ceph osd crush rule ls
+```
+
+Kết quả 
+```sh 
+replicated_rule
+```
+
+Dump chi tiết của 1 rule
+```sh 
+[root@ceph01 ~]# ceph osd crush rule dump
+[
+    {
+        "rule_id": 0,
+        "rule_name": "replicated_rule",
+        "ruleset": 0,
+        "type": 1,
+        "min_size": 1,
+        "max_size": 10,
+        "steps": [
+            {
+                "op": "take",
+                "item": -1,
+                "item_name": "default"
+            },
+            {
+                "op": "chooseleaf_firstn",
+                "num": 0,
+                "type": "host"
+            },
+            {
+                "op": "emit"
+            }
+        ]
+    }
+]
+```
+
+Mặc định các pool được tạo sẽ sử dụng rule `replicated_rule` với `rule_id:0` 
+```sh 
+[root@ceph01 ~]# ceph osd pool ls detail
+pool 69 '.rgw.root' replicated size 2 min_size 1 crush_rule 0 object_hash rjenkins pg_num 4 pgp_num 4 autoscale_mode warn last_change 517 flags hashpspool stripe_width 0 application rgw
+pool 70 'default.rgw.control' replicated size 2 min_size 1 crush_rule 0 object_hash rjenkins pg_num 4 pgp_num 4 autoscale_mode warn last_change 518 flags hashpspool stripe_width 0 application rgw
+pool 71 'default.rgw.data.root' replicated size 2 min_size 1 crush_rule 0 object_hash rjenkins pg_num 4 pgp_num 4 autoscale_mode warn last_change 472 flags hashpspool stripe_width 0
+pool 72 'default.rgw.gc' replicated size 2 min_size 1 crush_rule 0 object_hash rjenkins pg_num 4 pgp_num 4 autoscale_mode warn last_change 475 flags hashpspool stripe_width 0
+pool 73 'default.rgw.log' replicated size 2 min_size 1 crush_rule 0 object_hash rjenkins pg_num 4 pgp_num 4 autoscale_mode warn last_change 519 flags hashpspool stripe_width 0 application rgw
+pool 74 'default.rgw.intent-log' replicated size 2 min_size 1 crush_rule 0 object_hash rjenkins pg_num 4 pgp_num 4 autoscale_mode warn last_change 482 flags hashpspool stripe_width 0
+pool 75 'default.rgw.meta' replicated size 2 min_size 1 crush_rule 0 object_hash rjenkins pg_num 4 pgp_num 4 autoscale_mode warn last_change 520 flags hashpspool stripe_width 0 application rgw
+pool 76 'default.rgw.usage' replicated size 2 min_size 1 crush_rule 0 object_hash rjenkins pg_num 4 pgp_num 4 autoscale_mode warn last_change 489 flags hashpspool stripe_width 0
+pool 77 'default.rgw.users.keys' replicated size 2 min_size 1 crush_rule 0 object_hash rjenkins pg_num 4 pgp_num 4 autoscale_mode warn last_change 492 flags hashpspool stripe_width 0
+pool 78 'default.rgw.users.email' replicated size 2 min_size 1 crush_rule 0 object_hash rjenkins pg_num 4 pgp_num 4 autoscale_mode warn last_change 495 flags hashpspool stripe_width 0
+pool 79 'default.rgw.users.swift' replicated size 2 min_size 1 crush_rule 0 object_hash rjenkins pg_num 4 pgp_num 4 autoscale_mode warn last_change 499 flags hashpspool stripe_width 0
+pool 80 'default.rgw.users.uid' replicated size 2 min_size 1 crush_rule 0 object_hash rjenkins pg_num 4 pgp_num 4 autoscale_mode warn last_change 502 flags hashpspool stripe_width 0
+pool 81 'default.rgw.buckets.extra' replicated size 2 min_size 1 crush_rule 0 object_hash rjenkins pg_num 4 pgp_num 4 autoscale_mode warn last_change 506 flags hashpspool stripe_width 0
+pool 82 'default.rgw.buckets.index' replicated size 2 min_size 1 crush_rule 0 object_hash rjenkins pg_num 4 pgp_num 4 autoscale_mode warn last_change 521 flags hashpspool stripe_width 0 application rgw
+pool 83 'default.rgw.buckets.data' replicated size 2 min_size 1 crush_rule 0 object_hash rjenkins pg_num 128 pgp_num 128 autoscale_mode warn last_change 522 flags hashpspool stripe_width 0 application rgw
+pool 84 'default.rgw.buckets.non-ec' replicated size 3 min_size 1 crush_rule 0 object_hash rjenkins pg_num 256 pgp_num 256 autoscale_mode warn last_change 516 flags hashpspool stripe_width 0 application rgw
+```
+
+Tạo mới một bucket root để cấu hình replicate 
+```sh 
+ceph osd crush add-bucket ssd_disk root
+```
+
+Kiểm tra 
+```sh 
+[root@ceph01 ~]# ceph osd tree 
+ID  CLASS WEIGHT  TYPE NAME       STATUS REWEIGHT PRI-AFF 
+-13             0 root ssd_disk                           
+ -1       0.16974 root default                            
+ -3       0.05658     host ceph01                         
+  0   hdd 0.02829         osd.0     down  1.00000 1.00000 
+  1   hdd 0.02829         osd.1     down  1.00000 1.00000 
+ -5       0.05658     host ceph02                         
+  2   hdd 0.02829         osd.2     down  1.00000 1.00000 
+  3   hdd 0.02829         osd.3     down  1.00000 1.00000 
+ -7       0.05658     host ceph03                         
+  4   hdd 0.02829         osd.4     down  1.00000 1.00000 
+  5   hdd 0.02829         osd.5     down  1.00000 1.00000 
+  6   ssd       0 osd.6               up  1.00000 1.00000 
+  7   ssd       0 osd.7               up  1.00000 1.00000 
+  8   ssd       0 osd.8               up  1.00000 1.00000 
+```
+
+Create rule mới cho các ổ SSD 
+```sh 
+ceph osd crush rule create-replicated ssd_rule ssd_disk host
+```
+
+Dump rule để kiểm tra 
+```sh 
+[root@ceph01 ~]# ceph osd crush rule dump
+[
+    {
+        "rule_id": 0,
+        "rule_name": "replicated_rule",
+        "ruleset": 0,
+        "type": 1,
+        "min_size": 1,
+        "max_size": 10,
+        "steps": [
+            {
+                "op": "take",
+                "item": -1,
+                "item_name": "default"
+            },
+            {
+                "op": "chooseleaf_firstn",
+                "num": 0,
+                "type": "host"
+            },
+            {
+                "op": "emit"
+            }
+        ]
+    },
+    {
+        "rule_id": 1,
+        "rule_name": "ssd_rule",
+        "ruleset": 1,
+        "type": 1,
+        "min_size": 1,
+        "max_size": 10,
+        "steps": [
+            {
+                "op": "take",
+                "item": -13,
+                "item_name": "ssd_disk"
+            },
+            {
+                "op": "chooseleaf_firstn",
+                "num": 0,
+                "type": "host"
+            },
+            {
+                "op": "emit"
+            }
+        ]
+    }
+]
+```
+
+Tạo mới các bucket host cho các OSD ssd 
+```sh 
+ceph osd crush add-bucket ceph01_ssd host
+ceph osd crush add-bucket ceph02_ssd host
+ceph osd crush add-bucket ceph03_ssd host
+```
+
+Di chuyển các host vừa tạo vào root ssd_disk
+```sh 
+ceph osd crush move ceph01_ssd root=ssd_disk
+ceph osd crush move ceph02_ssd root=ssd_disk
+ceph osd crush move ceph03_ssd root=ssd_disk
+```
+
+Di chuyển các OSD vào host tương ứng 
+```sh 
+ceph osd crush move osd.6 host=ceph01_ssd
+ceph osd crush move osd.7 host=ceph02_ssd
+ceph osd crush move osd.8 host=ceph03_ssd
+```
+
+Kiểm tra osd tree 
+```sh 
+[root@ceph01 ~]# ceph osd tree 
+ID  CLASS WEIGHT  TYPE NAME           STATUS REWEIGHT PRI-AFF 
+-13             0 root ssd_disk                               
+-14             0     host ceph01_ssd                         
+  6   ssd       0         osd.6           up  1.00000 1.00000 
+-15             0     host ceph02_ssd                         
+  7   ssd       0         osd.7           up  1.00000 1.00000 
+-16             0     host ceph03_ssd                         
+  8   ssd       0         osd.8           up  1.00000 1.00000 
+ -1       0.16974 root default                                
+ -3       0.05658     host ceph01                             
+  0   hdd 0.02829         osd.0         down  1.00000 1.00000 
+  1   hdd 0.02829         osd.1         down  1.00000 1.00000 
+ -5       0.05658     host ceph02                             
+  2   hdd 0.02829         osd.2         down  1.00000 1.00000 
+  3   hdd 0.02829         osd.3         down  1.00000 1.00000 
+ -7       0.05658     host ceph03                             
+  4   hdd 0.02829         osd.4         down  1.00000 1.00000 
+  5   hdd 0.02829         osd.5         down  1.00000 1.00000 
+```
+
+Reweight OSD 
+```sh 
+ceph osd reweight osd.6 1 
+ceph osd crush reweight osd.6 0.02829
+
+ceph osd reweight osd.7 1 
+ceph osd crush reweight osd.7 0.02829
+
+ceph osd reweight osd.8 1 
+ceph osd crush reweight osd.8 0.02829
+```
+
+Kiểm tra 
+```sh 
+[root@ceph01 ~]# ceph osd tree 
+ID  CLASS WEIGHT  TYPE NAME           STATUS REWEIGHT PRI-AFF 
+-13       0.08487 root ssd_disk                               
+-14       0.02829     host ceph01_ssd                         
+  6   ssd 0.02829         osd.6           up  1.00000 1.00000 
+-15       0.02829     host ceph02_ssd                         
+  7   ssd 0.02829         osd.7           up  1.00000 1.00000 
+-16       0.02829     host ceph03_ssd                         
+  8   ssd 0.02829         osd.8           up  1.00000 1.00000 
+ -1       0.16974 root default                                
+ -3       0.05658     host ceph01                             
+  0   hdd 0.02829         osd.0         down  1.00000 1.00000 
+  1   hdd 0.02829         osd.1         down  1.00000 1.00000 
+ -5       0.05658     host ceph02                             
+  2   hdd 0.02829         osd.2         down  1.00000 1.00000 
+  3   hdd 0.02829         osd.3         down  1.00000 1.00000 
+ -7       0.05658     host ceph03                             
+  4   hdd 0.02829         osd.4         down  1.00000 1.00000 
+  5   hdd 0.02829         osd.5         down  1.00000 1.00000 
+```
+
+Set pool `default.rgw.buckets.index` replicate trên ssd và chỉnh replicate size =3 
+```sh 
+ceph osd pool set default.rgw.buckets.index crush_rule ssd_rule
+ceph osd pool set default.rgw.buckets.index size 3
+```
+
+Điều chỉnh pg theo số osd (tính theo pgcal)
+```sh 
+ceph osd pool set default.rgw.buckets.index pg_num 128
+ceph osd pool set default.rgw.buckets.index pgp_num 128
+```
+
+Kiểm tra 
+```sh 
+[root@ceph01 ~]# ceph osd pool ls detail | grep default.rgw.buckets.index
+pool 18 'default.rgw.buckets.index' replicated size 3 min_size 1 crush_rule 1 object_hash rjenkins pg_num 128 pgp_num 16 pgp_num_target 128 autoscale_mode warn last_change 121 lfor 0/0/119 flags hashpspool stripe_width 0
+```
+
+## Đổi port mặc định
+```sh 
+[client.rgw.ceph01]
+rgw_frontends = "civetweb port=80"
+```
+
+Push config và restart service 
+```sh 
+ceph-deploy --overwrite-conf config push ceph01
+sudo systemctl restart ceph-radosgw@rgw.ceph01.service
+```
+
+Kiểm tra lại 
+
+![](http://i.imgur.com/d64kefD.png)
+
+![](http://i.imgur.com/mRS5tNJ.png)
+
+## Allow firewalld 
+```sh 
+# Firewalld 
+sudo firewall-cmd --list-all
+sudo firewall-cmd --zone=public --add-port 7480/tcp --permanent
+sudo firewall-cmd --zone=public --add-port 80/tcp --permanent
+sudo firewall-cmd --reload
+
+# Iptables
+sudo iptables --list
+sudo iptables -I INPUT 1 -i <iface> -p tcp -s <ip-address>/<netmask> --dport 80 -j ACCEPT
+sudo iptables -I INPUT 1 -i <iface> -p tcp -s <ip-address>/<netmask> --dport 7480 -j ACCEPT
+```
+
+## Tạo self cert
+```sh 
+sudo openssl req -new > new.ssl.csr
+```
+
+![](http://i.imgur.com/0o5pxyf.png)
+
+Tạo thư mục và copy cert vào thư mục
+```sh 
+mkdir /etc/ceph/private
+cp privkey.pem /etc/ceph/private/keyandcert.pem
+```
+
+Cấu hình lại `ceph.conf`
+```sh 
+[client.rgw.ceph01]
+rgw_frontends = civetweb port=80+443s ssl_certificate=/etc/ceph/private/keyandcert.pem
+```
+
+> ## Đang failed chưa start với cert được
+
+## Bucket sharding 
+
+Điều chỉnh 
+**Cách 1:** Cấu hình trong [global] `ceph.conf`
+```sh 
+rgw_override_bucket_index_max_shards = <giá trị lớn hơn 0>
+```
+
+Restart lại radosgw để nhận cấu hình mới 
+
+**Cách 2:** Dump và chỉnh sửa zone 
+```sh 
+radosgw-admin zonegroup get > zonegroup.json
+```
+
+Chỉnh sửa `bucket_index_max_shards` cho mỗi zone name 
+```sh
+radosgw-admin zonegroup set < zonegroup.json
+```
+
+Update và commit 
+```sh
+radosgw-admin period update --commit
+```
+
+## Thêm Wildcard cho DNS
 
 
+## Add Debug 
+```sh 
+[global]
+#append the following in the global section.
+debug ms = 1
+debug rgw = 20
+```
+
+## Sử dụng gateway 
 
 
+## Kiểm tra kêt nối 
+Trên máy client thực hiện cài đặt 
+```sh 
+sudo yum install python-boto
+```
+
+Tạo file `test.py`
+```sh 
+import boto.s3.connection
+
+access_key = 'CO6OCWV0PG68822O032P'
+secret_key = 'ZqrE2dXl2WzPd5BmrI1t7c6axt3ExG8BKrPw5Np7'
+conn = boto.connect_s3(
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+        host='{hostname}', port={port},
+        is_secure=False, calling_format=boto.s3.connection.OrdinaryCallingFormat(),
+       )
+
+bucket = conn.create_bucket('my-new-bucket')
+for bucket in conn.get_all_buckets():
+    print "{name} {created}".format(
+        name=bucket.name,
+        created=bucket.creation_date,
+    )
+```
+
+# Tài liệu tham khảo 
+
+[Tạo self cert Apache](https://www.linux.com/learn/creating-self-signed-ssl-certificates-apache-linux)

@@ -9,16 +9,14 @@
 
 ## Chuẩn bị và môi trường LAB (3 Node)
 
-- OS
 - CentOS7 - 64 bit
-- 04: HDD, trong đó:
-- `sda`: sử dụng để cài OS
-- `sdb`,`sdc`,`sdd`: sử dụng làm OSD (nơi chứa dữ liệu)
+- 03: HDD, trong đó:
+    - `sda`: sử dụng để cài OS
+    - `vdb`,`vdc`: sử dụng làm OSD (nơi chứa dữ liệu)
 - 03 NICs: 
-- `eth0`: dùng để ssh và tải gói cài đặt
-- `eth1`: dùng để các trao đổi thông tin giữa các node Ceph, cũng là đường Client kết nối vào
-- `eth2`: dùng để đồng bộ dữ liệu giữa các OSD
-
+    - `eth0`: dùng để ssh và tải gói cài đặt
+    - `eth1`: dùng để các trao đổi thông tin giữa các node Ceph, cũng là đường Client kết nối vào
+    - `eth2`: dùng để đồng bộ dữ liệu giữa các OSD
 - Phiên bản cài đặt : Ceph Nautilus
 
 
@@ -50,6 +48,12 @@ systemctl enable chronyd
 - Kiểm tra chronyd hoạt động 
 ```sh 
 chronyc sources -v 
+timedatectl
+```
+
+- Set hwclock 
+```sh 
+hwclock --systohc
 ```
 
 - Đặt hostname
@@ -59,10 +63,6 @@ hostnamectl set-hostname ceph01
 
 - Đặt IP cho các node
 ```sh 
-systemctl disable NetworkManager
-systemctl enable network
-systemctl start network
-
 echo "Setup IP eth0"
 nmcli c modify eth0 ipv4.addresses 10.10.10.61/24
 nmcli c modify eth0 ipv4.gateway 10.10.10.1
@@ -79,6 +79,10 @@ echo "Setup IP eth2"
 nmcli c modify eth2 ipv4.addresses 10.10.14.61/24
 nmcli c modify eth2 ipv4.method manual
 nmcli con mod eth2 connection.autoconnect yes
+
+systemctl disable NetworkManager
+systemctl enable network
+systemctl start network
 ```
 
 - Cài đặt epel-relese và update OS 
@@ -92,10 +96,25 @@ yum update -y
 curl -Lso- https://raw.githubusercontent.com/nhanhoadocs/scripts/master/Utilities/cmdlog.sh | bash
 ```
 
+- Bổ sung user `cephuser`
+```sh 
+sudo useradd -d /home/cephuser -m cephuser
+sudo passwd cephuser
+````
+
+- Cấp quyền sudo cho `cephuser`
+```sh
+echo "cephuser ALL = (root) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/cephuser
+sudo chmod 0440 /etc/sudoers.d/cephuser
+```
+
 - Vô hiệu hóa Selinux
 ```sh
-setenforce 0
+sudo setenforce 0
 sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux
+sed -i 's/SELINUX=permissive/SELINUX=disabled/g' /etc/sysconfig/selinux
+sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+sed -i 's/SELINUX=permissive/SELINUX=disabled/g' /etc/selinux/config
 ```
 
 - Mở port cho Ceph trên Firewalld  
@@ -151,18 +170,47 @@ init 6
 
 ## Cài đặt Ceph 
 
+Bổ sung repo cho ceph trên tất cả các node
+```sh 
+cat <<EOF> /etc/yum.repos.d/ceph.repo
+[ceph]
+name=Ceph packages for $basearch
+baseurl=https://download.ceph.com/rpm-nautilus/el7/x86_64/
+enabled=1
+priority=2
+gpgcheck=1
+gpgkey=https://download.ceph.com/keys/release.asc
+
+[ceph-noarch]
+name=Ceph noarch packages
+baseurl=https://download.ceph.com/rpm-nautilus/el7/noarch
+enabled=1
+priority=2
+gpgcheck=1
+gpgkey=https://download.ceph.com/keys/release.asc
+
+[ceph-source]
+name=Ceph source packages
+baseurl=https://download.ceph.com/rpm-nautilus/el7/SRPMS
+enabled=0
+priority=2
+gpgcheck=1
+gpgkey=https://download.ceph.com/keys/release.asc
+EOF
+
+yum update -y
+```
+
 Các bước ở dưới được thực hiện toàn toàn trên Node `ceph01`
+
+- Cài đặt `python-setuptools`
+```sh 
+yum install python-setuptools -y
+```
 
 - Cài đặt `ceph-deploy`
 ```sh 
-yum install -y wget 
-wget https://download.ceph.com/rpm-nautilus/el7/noarch/ceph-deploy-2.0.1-0.noarch.rpm --no-check-certificate
-rpm -ivh ceph-deploy-2.0.1-0.noarch.rpm
-```
-
-- Cài đặt `python-setuptools` để `ceph-deploy` có thể hoạt động ổn định
-```sh 
-curl https://bootstrap.pypa.io/ez_setup.py | python
+yum install ceph-deploy -y
 ```
 
 - Kiểm tra cài đặt 
@@ -180,12 +228,28 @@ ssh-keygen
 ```
 > Bấm ENTER khi có requirement 
 
+- Cấu hình user ssh cho ceph-deploy
+```sh 
+cat <<EOF> /root/.ssh/config
+Host ceph01
+    Hostname ceph01
+    User cephuser
+Host ceph02
+    Hostname ceph02
+    User cephuser
+Host ceph03
+    Hostname ceph03
+    User cephuser
+EOF
+```
+
 - Copy ssh key sang các node khác
 ```sh
-ssh-copy-id root@ceph01
-ssh-copy-id root@ceph02
-ssh-copy-id root@ceph03
+ssh-copy-id ceph01
+ssh-copy-id ceph02
+ssh-copy-id ceph03
 ```
+> Nhập mật khẩu
 
 - Tạo các thư mục `ceph-deploy` để thao tác cài đặt vận hành Cluster
 ```sh
@@ -194,7 +258,7 @@ mkdir /ceph-deploy && cd /ceph-deploy
 
 - Khởi tại file cấu hình cho cụm với node quản lý là `ceph01`
 ```sh
-ceph-deploy new ceph01
+ceph-deploy new ceph01 ceph02 ceph03
 ```
 
 - Kiểm tra lại thông tin folder `ceph-deploy`
@@ -214,7 +278,7 @@ dr-xr-xr-x. 18 root root  243 Jan 31 16:29 ..
 
 - Chúng ta sẽ bổ sung thêm vào file `ceph.conf` một vài thông tin cơ bản như sau:
 ```sh
-cat << EOF >> /ceph-deploy/ceph.conf
+cat << EOF >> ceph.conf
 osd pool default size = 2
 osd pool default min size = 1
 osd pool default pg num = 128
@@ -238,13 +302,13 @@ EOF
 ceph-deploy install --release nautilus ceph01 ceph02 ceph03 
 ```
 
-- Kiểm tra sau khi cài đặt 
+- Kiểm tra sau khi cài đặt trên cả 3 node
 ```sh 
 ceph -v 
 ```
 > Kết quả như sau là đã cài đặt thành công ceph trên node 
 ```sh 
-ceph version 14.2.1 (xxxxxx) nautilus (stable)
+ ceph version 14.2.2 (4f8fa0a0024755aae7d95567c63f11d6862d55be) nautilus (stable)
 ```
 
 - Khởi tạo cluster với các node `mon` (Monitor-quản lý) dựa trên file `ceph.conf`
@@ -252,7 +316,8 @@ ceph version 14.2.1 (xxxxxx) nautilus (stable)
 ceph-deploy mon create-initial
 ```
 
-- Sau khi thực hiện lệnh phía trên sẽ sinh thêm ra 05 file : `ceph.bootstrap-mds.keyring`, `ceph.bootstrap-mgr.keyring`, `ceph.bootstrap-osd.keyring`, `ceph.client.admin.keyring` và `ceph.bootstrap-rgw.keyring`. Quan sát bằng lệnh `ll -alh`
+- Sau khi thực hiện lệnh phía trên sẽ sinh thêm ra 05 file : 
+`ceph.bootstrap-mds.keyring`, `ceph.bootstrap-mgr.keyring`, `ceph.bootstrap-osd.keyring`, `ceph.client.admin.keyring` và `ceph.bootstrap-rgw.keyring`. Quan sát bằng lệnh `ll -alh`
 
 ```sh
 [root@ceph01 ceph-deploy]# ls -lah
@@ -269,27 +334,27 @@ dr-xr-xr-x. 18 root root  243 Feb  1 11:29 ..
 -rw-------   1 root root   73 Feb  1 11:29 ceph.mon.keyring
 ```
 
-- Để node `ceph01` có thể thao tác với cluster chúng ta cần gán cho node `ceph01` với quyền admin bằng cách bổ sung cho node này `admin.keying`
+- Để node `ceph01`, `ceph02`, `ceph03` có thể thao tác với cluster chúng ta cần gán cho node quyền admin bằng cách bổ sung key `admin.keying` cho node
 ```sh  
-ceph-deploy admin ceph01
+ceph-deploy admin ceph01 ceph02 ceph03
 ```
 > Kiểm tra bằng lệnh 
 ```sh
-[root@ceph01 ceph-deploy]# ceph -s
-cluster:
-    id:     39d1a369-bf54-8907-d49b-490a771ac0e2
+[root@ceph01 ceph-deploy]# ceph -s 
+  cluster:
+    id:     ba7c7fa1-4e55-450b-bc40-4cf122b28c27
     health: HEALTH_OK
-
-services:
-    mon: 1 daemons, quorum ceph01
+ 
+  services:
+    mon: 3 daemons, quorum ceph01,ceph02,ceph03 (age 1.09337s)
     mgr: no daemons active
     osd: 0 osds: 0 up, 0 in
-
-data:
+ 
+  data:
     pools:   0 pools, 0 pgs
-    objects: 0  objects, 0 B
+    objects: 0 objects, 0 B
     usage:   0 B used, 0 B / 0 B avail
-    pgs:
+    pgs:     
 ```
 
 ## Khởi tạo MGR
@@ -298,30 +363,29 @@ Ceph-mgr là thành phần cài đặt yêu cầu cần khởi tạo từ bản 
 
 - Cài đặt ceph-mgr trên ceph01
 ```sh
-ceph-deploy mgr create ceph01
+ceph-deploy mgr create ceph01 ceph02
 ```
 
 - Kiểm tra cài đặt 
 ```sh
-[root@ceph01 ceph-deploy]# ceph -s
-cluster:
-    id:     39d1a369-bf54-8907-d49b-490a771ac0e2
+[root@ceph01 ceph-deploy]# ceph -s 
+  cluster:
+    id:     ba7c7fa1-4e55-450b-bc40-4cf122b28c27
     health: HEALTH_OK
-
-services:
-    mon: 1 daemons, quorum ceph01
-    mgr: ceph01(active)
+ 
+  services:
+    mon: 3 daemons, quorum ceph01,ceph02,ceph03 (age 53s)
+    mgr: ceph01(active, since 11s), standbys: ceph02
     osd: 0 osds: 0 up, 0 in
-
-    data:
+ 
+  data:
     pools:   0 pools, 0 pgs
-    objects: 0  objects, 0 B
+    objects: 0 objects, 0 B
     usage:   0 B used, 0 B / 0 B avail
-    pgs:
+    pgs:     
 ```
 
 - Ceph-mgr hỗ trợ dashboard để quan sát trạng thái của cluster, Enable mgr dashboard trên host ceph01
-
 ```sh
 yum install ceph-mgr-dashboard -y
 ceph mgr module enable dashboard
@@ -329,6 +393,8 @@ ceph dashboard create-self-signed-cert
 ceph dashboard set-login-credentials <username> <password>
 ceph mgr services
 ```
+
+> Lưu ý cài đặt `yum install ceph-mgr-dashboard -y` trên cả `ceph01` và `ceph02` 
 
 - Truy cập vào mgr dashboard với username và password vừa đặt ở phía trên để kiểm tra
 ```sh 
@@ -339,32 +405,53 @@ https://<ip-ceph01>:8443
 
 ## Khởi tạo OSD
 
-Tạo OSD thông qua ceph-deploy tại host ceph01
+Tạo OSD thông qua ceph-deploy tại host `ceph01`
 
-- Trên ceph01, dùng ceph-deploy để partition ổ cứng OSD, thay `ceph01` bằng hostname của host chứa OSD
+- Thực hiện zapdisk 
 ```sh
-ceph-deploy disk zap ceph01 /dev/sdb
+ceph-deploy disk zap ceph01 /dev/vdb
+ceph-deploy disk zap ceph01 /dev/vdc
 ```
 
 - Tạo OSD với ceph-deploy
 ```sh
-ceph-deploy osd create --data /dev/sdb ceph01
+ceph-deploy osd create --data /dev/vdb ceph01
+ceph-deploy osd create --data /dev/vdc ceph01
 ``` 
+
+- Thao tác với các ổ trên `ceph02` và `ceph03` tương tự. Vẫn thực hiện trên thư mục `ceph-deploy` trên `ceph01`
+```sh 
+# ceph02 
+ceph-deploy disk zap ceph02 /dev/vdb
+ceph-deploy disk zap ceph02 /dev/vdc
+ceph-deploy osd create --data /dev/vdb ceph02
+ceph-deploy osd create --data /dev/vdc ceph02
+
+# ceph03
+ceph-deploy disk zap ceph03 /dev/vdb
+ceph-deploy disk zap ceph03 /dev/vdc
+ceph-deploy osd create --data /dev/vdb ceph03
+ceph-deploy osd create --data /dev/vdc ceph03
+```
 
 - Kiểm tra osd vừa tạo bằng lệnh
 ```sh
 ceph osd tree
 ``` 
-
-- Kiểm tra ID của OSD bằng lệnh
-```sh
-lsblk
-```
-
-Kết quả:
-```sh
-sdb                                                                                                     8:112  0   39G  0 disk  
-└─ceph--42804049--4734--4a87--b776--bfad5d382114-osd--data--e6346e12--c312--4ccf--9b5f--0efeb61d0144  253:5    0   39G  0 lvm   /var/lib/ceph/osd/ceph-0
+- Kết quả 
+```sh 
+[root@ceph01 ceph-deploy]# ceph osd tree 
+ID CLASS WEIGHT  TYPE NAME       STATUS REWEIGHT PRI-AFF 
+-1       0.16974 root default                            
+-3       0.05658     host ceph01                         
+ 0   hdd 0.02829         osd.0       up  1.00000 1.00000 
+ 1   hdd 0.02829         osd.1       up  1.00000 1.00000 
+-5       0.05658     host ceph02                         
+ 2   hdd 0.02829         osd.2       up  1.00000 1.00000 
+ 3   hdd 0.02829         osd.3       up  1.00000 1.00000 
+-7       0.05658     host ceph03                         
+ 4   hdd 0.02829         osd.4       up  1.00000 1.00000 
+ 5   hdd 0.02829         osd.5       up  1.00000 1.00000 
 ```
 
 ## Kiểm tra
@@ -376,21 +463,21 @@ ceph -s
 
 - Kết quả của lệnh trên như sau: 
 ```sh
-ceph-deploy@ceph01:~/my-cluster$ ceph -s
+[root@ceph01 ceph-deploy]# ceph -s
   cluster:
-    id:     3f59d96e-2725-4b0c-b726-baae012b3928
+    id:     ba7c7fa1-4e55-450b-bc40-4cf122b28c27
     health: HEALTH_OK
  
   services:
-    mon: 1 daemons, quorum ceph01 (age 94m)
-    mgr: ceph01(active, since 5m)
-    osd: 3 osds: 3 up (since 94m), 3 in (since 2h)
-
-data:
+    mon: 3 daemons, quorum ceph01,ceph02,ceph03 (age 10m)
+    mgr: ceph01(active, since 7m), standbys: ceph02
+    osd: 6 osds: 6 up (since 51s), 6 in (since 51s)
+ 
+  data:
     pools:   0 pools, 0 pgs
-    objects: 0 objects, 0 bytes
-    usage:   3180 MB used, 116 GB / 119 GB avail
-    pgs:     
+    objects: 0 objects, 0 B
+    usage:   6.0 GiB used, 168 GiB / 174 GiB avail
+    pgs:          
 ```
 
 - Nếu có dòng `health HEALTH_OK` thì việc cài đặt đã ok.
