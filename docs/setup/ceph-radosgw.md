@@ -98,8 +98,42 @@ ID CLASS WEIGHT  TYPE NAME       STATUS REWEIGHT PRI-AFF
 
 Tạo pool dựa theo https://ceph.com/pgcalc
 ![](http://i.imgur.com/6DmonQz.png)
+
 ```sh 
-e
+ceph osd pool create .rgw.root 8
+ceph osd pool create default.rgw.control 8
+ceph osd pool create default.rgw.data.root 8
+ceph osd pool create default.rgw.gc 8
+ceph osd pool create default.rgw.log 8
+ceph osd pool create default.rgw.intent-log 8
+ceph osd pool create default.rgw.meta 8
+ceph osd pool create default.rgw.usage 8
+ceph osd pool create default.rgw.users.keys 8
+ceph osd pool create default.rgw.users.email 8
+ceph osd pool create default.rgw.users.swift 8
+ceph osd pool create default.rgw.users.uid 8
+ceph osd pool create default.rgw.buckets.extra 8
+ceph osd pool create default.rgw.buckets.index 16
+ceph osd pool create default.rgw.buckets.data 512
+```
+
+Enable application cho các pool vừa tạo
+```sh 
+ceph osd pool application enable .rgw.root                  rgw
+ceph osd pool application enable default.rgw.control        rgw
+ceph osd pool application enable default.rgw.data.root      rgw
+ceph osd pool application enable default.rgw.gc             rgw
+ceph osd pool application enable default.rgw.log            rgw
+ceph osd pool application enable default.rgw.intent-log     rgw
+ceph osd pool application enable default.rgw.meta           rgw
+ceph osd pool application enable default.rgw.usage          rgw
+ceph osd pool application enable default.rgw.users.keys     rgw
+ceph osd pool application enable default.rgw.users.email    rgw
+ceph osd pool application enable default.rgw.users.swift    rgw
+ceph osd pool application enable default.rgw.users.uid      rgw
+ceph osd pool application enable default.rgw.buckets.extra  rgw
+ceph osd pool application enable default.rgw.buckets.index  rgw
+ceph osd pool application enable default.rgw.buckets.data   rgw
 ```
 
 Bổ sung config không cho phép tự động cập nhật crushmap
