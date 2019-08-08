@@ -471,6 +471,108 @@ Kiểm tra
 pool 18 'default.rgw.buckets.index' replicated size 3 min_size 1 crush_rule 1 object_hash rjenkins pg_num 128 pgp_num 16 pgp_num_target 128 autoscale_mode warn last_change 121 lfor 0/0/119 flags hashpspool stripe_width 0
 ```
 
+# Sử dụng Nginx làm Reverse cho RadosGW 
+
+## Lý do 
+
+- Thứ nhất: Các kết nối vào RadosGW hiện tại được triển khai trên 3 node cần có Proxy để điều hướng các request vào server
+- Thứ hai: Việc sử dụng Nginx làm proxy chứ ko dùng HAproxy lý do là vì Object Storage tập trung vào lưu trữ các file không có thay đổi nhiều (dạng file tĩnh). Kết hợp với thế mạnh của Nginx trong vai trò làm font-end xử lý các file tĩnh.
+
+
+## Cấu hình trên node Ceph01 
+
+Cài đặt nginx 
+```sh 
+sudo yum install epel-release -y
+sudo yum install nginx -y
+```
+
+Start, enable và kiểm tra 
+```sh 
+systemctl enable --now nginx 
+```
+
+Kiểm tra nginx hoạt động trên trình duyệt 
+
+![](../../images/radosgw/nginx.png)
+
+Cấu hình file `/etc/nginx/nginx.conf` để điều hướng request về RadosGW 
+
+Backup cấu hình 
+```sh 
+cp /etc/nginx/nginx.{conf,conf.bk}
+```
+
+Chỉnh sửa cầu hình trong file `nginx.conf`
+
+Từ 
+```sh 
+location / {
+}
+```
+Thành 
+```sh
+location / {
+    proxy_set_header Host $http_host;
+    proxy_pass http://localhost:7480;
+}
+```
+
+Kiểm tra cấu hình config và reload nginx 
+```sh 
+nginx -t 
+nginx -s reload
+```
+
+Truy cập web và kiểm tra
+
+![](../../images/radosgw/nginx1.png)
+
+Cấu hình nginx để redirect đến toàn bộ các node Ceph còn lại sử dụng round robin
+
+Bổ sung `upstream` trong block `http`
+```sh 
+upstream radosgw {
+server 10.10.10.61:7480;
+server 10.10.10.62:7480;
+server 10.10.10.63:7480;
+}
+```
+
+Điều chỉnh proxypass về upstream vừa cấu hình
+
+![](../../images/radosgw/nginx2.png)
+
+Kiểm tra cấu hình config và reload nginx 
+```sh 
+nginx -t 
+nginx -s reload
+```
+
+Kiểm tra truy cập trên web và kiểm chứng trên log của ceph-radosgw
+
+![](../../images/radosgw/nginx_rr.gif)
+
+## Cấu hình KeepAlive IP Failover cho hệ thống (Cấu hình trên cả 3 node Ceph)
+
+Cài đặt, cấu hình nginx và kiểm tra tương tự Ceph01 trên các node Ceph02 và Ceph03 đảm bảo truy cập được RadosGW khi sử dụng IP của Ceph02 và Ceph03
+
+- Sử dụng IP: 10.10.10.60 làm IPVIP 
+
+Cài đặt keepalive trên cả 3 node
+```sh 
+yum install -y keepalived
+```
+
+Cấu hình cho phép IPVIP có thể gắn lên interface và có thể sử dụng IP Forward 
+```sh 
+echo "net.ipv4.ip_nonlocal_bind = 1" >> /etc/sysctl.conf
+echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
+sysctl -p
+```
+
+# Các cấu hình khác 
+
 ## Đổi port mặc định
 ```sh 
 [client.rgw.ceph01]
