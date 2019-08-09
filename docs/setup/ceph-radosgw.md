@@ -571,6 +571,182 @@ echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
 sysctl -p
 ```
 
+Backup cấu hình `keepalived.conf`
+```sh 
+cp /etc/keepalived/keepalived.{conf,conf.bk}
+```
+
+Node Ceph01 
+```sh 
+> /etc/keepalived/keepalived.conf
+cat << EOF >> /etc/keepalived/keepalived.conf
+global_defs {
+   notification_email {
+        canhdx@nhanhoa.com.vn
+   }
+   notification_email_from keepalived@s3.cloud365.vn
+   smtp_server mail.cloud365.vn
+   smtp_connect_timeout 30
+ 
+}
+ 
+vrrp_script chk_nginx {
+        script "killall -0 nginx"     
+        interval 2
+        weight 4
+}
+ 
+vrrp_instance VI_1 {
+    state MASTER
+    interface eth0
+    mcast_src_ip 10.10.10.61
+    virtual_router_id 50
+    priority 100
+    advert_int 1
+    authentication {
+        auth_type AH
+        auth_pass S3@Cloud365
+    }
+    virtual_ipaddress {
+        10.10.10.60
+    }
+    track_script 
+    {
+        chk_nginx
+    }
+}
+EOF
+```
+
+Node Ceph02 
+```sh 
+> /etc/keepalived/keepalived.conf
+cat << EOF >> /etc/keepalived/keepalived.conf
+global_defs {
+   notification_email {
+        canhdx@nhanhoa.com.vn
+   }
+   notification_email_from keepalived@s3.cloud365.vn
+   smtp_server mail.cloud365.vn
+   smtp_connect_timeout 30
+ 
+}
+
+vrrp_script chk_nginx {
+        script "killall -0 nginx"     
+        interval 2
+        weight 4
+}
+ 
+vrrp_instance VI_1 {
+    state BACKUP
+    interface eth0
+    mcast_src_ip 10.10.10.62
+    virtual_router_id 50
+    priority 98
+    advert_int 1
+    authentication {
+        auth_type AH
+        auth_pass S3@Cloud365
+    }
+    virtual_ipaddress {
+        10.10.10.60
+    }
+    track_script 
+    {
+        chk_nginx
+    }
+}
+EOF
+```
+
+Node Ceph03
+```sh 
+> /etc/keepalived/keepalived.conf
+cat << EOF >> /etc/keepalived/keepalived.conf
+global_defs {
+   notification_email {
+        canhdx@nhanhoa.com.vn
+   }
+   notification_email_from keepalived@s3.cloud365.vn
+   smtp_server mail.cloud365.vn
+   smtp_connect_timeout 30
+ 
+}
+
+vrrp_script chk_nginx {
+        script "killall -0 nginx"     
+        interval 2
+        weight 4
+}
+ 
+vrrp_instance VI_1 {
+    state BACKUP
+    interface eth0
+    mcast_src_ip 10.10.10.63
+    virtual_router_id 50
+    priority 98
+    advert_int 1
+    authentication {
+        auth_type AH
+        auth_pass S3@Cloud365
+    }
+    virtual_ipaddress {
+        10.10.10.60
+    }
+    track_script 
+    {
+        chk_nginx
+    }
+}
+EOF
+```
+
+Start và enable service 
+```sh 
+systemctl enable --now keepalived
+```
+
+Kiểm tra IP 
+```sh 
+[root@ceph01 ~]# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 52:54:00:6a:bf:5b brd ff:ff:ff:ff:ff:ff
+    inet 10.10.10.61/24 brd 10.10.10.255 scope global eth0
+       valid_lft forever preferred_lft forever
+    inet 10.10.10.60/32 scope global eth0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::5054:ff:fe6a:bf5b/64 scope link 
+       valid_lft forever preferred_lft forever
+3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 52:54:00:55:54:c0 brd ff:ff:ff:ff:ff:ff
+    inet 10.10.13.61/24 brd 10.10.13.255 scope global eth1
+       valid_lft forever preferred_lft forever
+    inet6 fe80::5054:ff:fe55:54c0/64 scope link 
+       valid_lft forever preferred_lft forever
+4: eth2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 52:54:00:10:5d:19 brd ff:ff:ff:ff:ff:ff
+    inet 10.10.14.61/24 brd 10.10.14.255 scope global eth2
+       valid_lft forever preferred_lft forever
+    inet6 fe80::5054:ff:fe10:5d19/64 scope link 
+       valid_lft forever preferred_lft forever
+[root@ceph01 ~]# 
+```
+
+Truy cập 10.10.10.60 trên trình duyệt
+
+Thử stop nginx trên Ceph01 và kiểm tra trên Ceph còn lại 
+
+Thử shutdown node Ceph01 và kiểm tra trên Ceph còn lại 
+
+Hoàn tất
+
 # Các cấu hình khác 
 
 ## Đổi port mặc định
