@@ -694,7 +694,7 @@ Thử shutdown node Ceph01 và kiểm tra trên Ceph còn lại
 - Thứ hai: Việc sử dụng Nginx làm proxy chứ ko dùng HAproxy lý do là vì Object Storage tập trung vào lưu trữ các file không có thay đổi nhiều (dạng file tĩnh). Kết hợp với thế mạnh của Nginx trong vai trò làm font-end xử lý các file tĩnh.
 
 
-## Cấu hình `/etc/hosts`
+## Cấu hình `/etc/hosts` trên máy Client
 ```sh
 cat << EOF >> /etc/hosts
 
@@ -833,6 +833,8 @@ canhdx@BaCT:~$ s3cmd mb s3://canhdx
 Bucket 's3://canhdx/' created
 canhdx@BaCT:~$ 
 ```
+
+![](../../images/radosgw/nginx3.png)
 
 # Thêm Wildcard cho DNS
 
