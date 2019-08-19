@@ -4,6 +4,18 @@
 
 Cài đặt theo [tài liệu](ceph-nautilus.md)
 
+## Allow firewalld 
+```sh 
+# Firewalld 
+sudo firewall-cmd --list-all
+sudo firewall-cmd --zone=public --add-port 7480/tcp --permanent
+sudo firewall-cmd --reload
+
+# Iptables
+sudo iptables --list
+sudo iptables -I INPUT 1 -i <iface> -p tcp -s <ip-address>/<netmask> --dport 7480 -j ACCEPT
+```
+
 ## Cài đặt Ceph RadosGW 
 http://docs.ceph.com/docs/mimic/install/install-ceph-gateway/
 
@@ -471,89 +483,7 @@ Kiểm tra
 pool 18 'default.rgw.buckets.index' replicated size 3 min_size 1 crush_rule 1 object_hash rjenkins pg_num 128 pgp_num 16 pgp_num_target 128 autoscale_mode warn last_change 121 lfor 0/0/119 flags hashpspool stripe_width 0
 ```
 
-# Sử dụng Nginx làm Reverse cho RadosGW 
-
-## Lý do 
-
-- Thứ nhất: Các kết nối vào RadosGW hiện tại được triển khai trên 3 node cần có Proxy để điều hướng các request vào server
-- Thứ hai: Việc sử dụng Nginx làm proxy chứ ko dùng HAproxy lý do là vì Object Storage tập trung vào lưu trữ các file không có thay đổi nhiều (dạng file tĩnh). Kết hợp với thế mạnh của Nginx trong vai trò làm font-end xử lý các file tĩnh.
-
-
-## Cấu hình trên node Ceph01 
-
-Cài đặt nginx 
-```sh 
-sudo yum install epel-release -y
-sudo yum install nginx -y
-```
-
-Start, enable và kiểm tra 
-```sh 
-systemctl enable --now nginx 
-```
-
-Kiểm tra nginx hoạt động trên trình duyệt 
-
-![](../../images/radosgw/nginx.png)
-
-Cấu hình file `/etc/nginx/nginx.conf` để điều hướng request về RadosGW 
-
-Backup cấu hình 
-```sh 
-cp /etc/nginx/nginx.{conf,conf.bk}
-```
-
-Chỉnh sửa cầu hình trong file `nginx.conf`
-
-Từ 
-```sh 
-location / {
-}
-```
-Thành 
-```sh
-location / {
-    proxy_set_header Host $http_host;
-    proxy_pass http://localhost:7480;
-}
-```
-
-Kiểm tra cấu hình config và reload nginx 
-```sh 
-nginx -t 
-nginx -s reload
-```
-
-Truy cập web và kiểm tra
-
-![](../../images/radosgw/nginx1.png)
-
-Cấu hình nginx để redirect đến toàn bộ các node Ceph còn lại sử dụng round robin
-
-Bổ sung `upstream` trong block `http`
-```sh 
-upstream radosgw {
-server 10.10.10.61:7480;
-server 10.10.10.62:7480;
-server 10.10.10.63:7480;
-}
-```
-
-Điều chỉnh proxypass về upstream vừa cấu hình
-
-![](../../images/radosgw/nginx2.png)
-
-Kiểm tra cấu hình config và reload nginx 
-```sh 
-nginx -t 
-nginx -s reload
-```
-
-Kiểm tra truy cập trên web và kiểm chứng trên log của ceph-radosgw
-
-![](../../images/radosgw/nginx_rr.gif)
-
-## Cấu hình KeepAlive IP Failover cho hệ thống (Cấu hình trên cả 3 node Ceph)
+# Cấu hình KeepAlive IP Failover cho hệ thống (Cấu hình trên cả 3 node Ceph)
 
 Cài đặt, cấu hình nginx và kiểm tra tương tự Ceph01 trên các node Ceph02 và Ceph03 đảm bảo truy cập được RadosGW khi sử dụng IP của Ceph02 và Ceph03
 
@@ -756,128 +686,254 @@ Thử stop nginx trên Ceph01 và kiểm tra trên Ceph còn lại
 
 Thử shutdown node Ceph01 và kiểm tra trên Ceph còn lại 
 
-Hoàn tất
+# Sử dụng Nginx làm Reverse cho RadosGW 
 
-# Các cấu hình khác 
+## Lý do 
 
-## Đổi port mặc định
-```sh 
-[client.rgw.ceph01]
-rgw_frontends = "civetweb port=80"
-```
+- Thứ nhất: Các kết nối vào RadosGW hiện tại được triển khai trên 3 node cần có Proxy để điều hướng các request vào server
+- Thứ hai: Việc sử dụng Nginx làm proxy chứ ko dùng HAproxy lý do là vì Object Storage tập trung vào lưu trữ các file không có thay đổi nhiều (dạng file tĩnh). Kết hợp với thế mạnh của Nginx trong vai trò làm font-end xử lý các file tĩnh.
 
-Push config và restart service 
-```sh 
-ceph-deploy --overwrite-conf config push ceph01
-sudo systemctl restart ceph-radosgw@rgw.ceph01.service
-```
 
-Kiểm tra lại 
-
-![](http://i.imgur.com/d64kefD.png)
-
-![](http://i.imgur.com/mRS5tNJ.png)
-
-## Allow firewalld 
-```sh 
-# Firewalld 
-sudo firewall-cmd --list-all
-sudo firewall-cmd --zone=public --add-port 7480/tcp --permanent
-sudo firewall-cmd --zone=public --add-port 80/tcp --permanent
-sudo firewall-cmd --reload
-
-# Iptables
-sudo iptables --list
-sudo iptables -I INPUT 1 -i <iface> -p tcp -s <ip-address>/<netmask> --dport 80 -j ACCEPT
-sudo iptables -I INPUT 1 -i <iface> -p tcp -s <ip-address>/<netmask> --dport 7480 -j ACCEPT
-```
-
-## Tạo self cert
-```sh 
-sudo openssl req -new > new.ssl.csr
-```
-
-![](http://i.imgur.com/0o5pxyf.png)
-
-Tạo thư mục và copy cert vào thư mục
-```sh 
-mkdir /etc/ceph/private
-cp privkey.pem /etc/ceph/private/keyandcert.pem
-```
-
-Cấu hình lại `ceph.conf`
-```sh 
-[client.rgw.ceph01]
-rgw_frontends = civetweb port=80+443s ssl_certificate=/etc/ceph/private/keyandcert.pem
-```
-
-> ## Đang failed chưa start với cert được
-
-## Bucket sharding 
-
-Điều chỉnh 
-**Cách 1:** Cấu hình trong [global] `ceph.conf`
-```sh 
-rgw_override_bucket_index_max_shards = <giá trị lớn hơn 0>
-```
-
-Restart lại radosgw để nhận cấu hình mới 
-
-**Cách 2:** Dump và chỉnh sửa zone 
-```sh 
-radosgw-admin zonegroup get > zonegroup.json
-```
-
-Chỉnh sửa `bucket_index_max_shards` cho mỗi zone name 
+## Cấu hình `/etc/hosts`
 ```sh
-radosgw-admin zonegroup set < zonegroup.json
+cat << EOF >> /etc/hosts
+
+10.10.10.60 radosgw.com
+EOF
 ```
 
-Update và commit 
-```sh
-radosgw-admin period update --commit
-```
+> radosgw.com là domain test của chúng ta.
 
-## Thêm Wildcard cho DNS
+## Cấu hình trên node Ceph01
 
-
-## Add Debug 
+Cài đặt nginx 
 ```sh 
-[global]
-#append the following in the global section.
-debug ms = 1
-debug rgw = 20
+sudo yum install epel-release -y
+sudo yum install nginx -y
 ```
 
-## Sử dụng gateway 
-
-
-## Kiểm tra kêt nối 
-Trên máy client thực hiện cài đặt 
+Start, enable và kiểm tra 
 ```sh 
-sudo yum install python-boto
+systemctl enable --now nginx 
 ```
 
-Tạo file `test.py`
+Kiểm tra nginx hoạt động trên trình duyệt 
+
+![](../../images/radosgw/nginx.png)
+
+Cấu hình virtualhost cho radosgw
 ```sh 
-import boto.s3.connection
+cat << EOF >> /etc/nginx/conf.d/radosgw.conf
+upstream radosgw {
+        server 10.10.10.61:7480;
+        server 10.10.10.62:7480;
+        server 10.10.10.63:7480;
+}
 
-access_key = 'CO6OCWV0PG68822O032P'
-secret_key = 'ZqrE2dXl2WzPd5BmrI1t7c6axt3ExG8BKrPw5Np7'
-conn = boto.connect_s3(
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key,
-        host='{hostname}', port={port},
-        is_secure=False, calling_format=boto.s3.connection.OrdinaryCallingFormat(),
-       )
+server {
+        server_name radosgw.com;
 
-bucket = conn.create_bucket('my-new-bucket')
-for bucket in conn.get_all_buckets():
-    print "{name} {created}".format(
-        name=bucket.name,
-        created=bucket.creation_date,
-    )
+        location / {
+                proxy_set_header Host \$host;
+                proxy_pass http://radosgw;
+        }
+
+    access_log /var/log/nginx/radosgw.access.log;
+    error_log /var/log/nginx/radosgw.error.log;
+}
+EOF
 ```
+
+Kiểm tra cấu hình config và reload nginx 
+```sh 
+nginx -t 
+nginx -s reload
+```
+
+Kiểm tra truy cập trên web và kiểm chứng trên log của ceph-radosgw của từng node Ceph
+
+![](../../images/radosgw/nginx_rr.gif)
+
+
+## Cấu hình tương tự trên node Ceph02 và Ceph03
+
+
+## Kiểm tra kêt nối sử dụng s3cmd
+
+Cài đặt s3cmd trên client
+```sh 
+apt-get install s3cmd -y
+```
+
+Tạo User trên Radosgw (1 trong 3 node Ceph)
+```sh 
+radosgw-admin user create --uid=canhdx --display-name="CanhDX" --email=canhdx@nhanhoa.com.vn
+```
+
+Trên Client thực hiện cấu hình `s3cmd`
+```sh 
+canhdx@BaCT:~$ s3cmd --configure
+
+Enter new values or accept defaults in brackets with Enter.
+Refer to user manual for detailed description of all options.
+
+Access key and Secret key are your identifiers for Amazon S3. Leave them empty for using the env variables.
+Access Key [LPVTHWQXFNL4IA8686D9]: 
+Secret Key [6l0hanpcltONN85bfTGN0sHOax2xsWm6JBqhSrMT]: 
+Default Region [US]: 
+
+Use "s3.amazonaws.com" for S3 Endpoint and not modify it to the target Amazon S3.
+S3 Endpoint [radosgw.com]: 10.10.10.60:7480
+
+Use "%(bucket)s.s3.amazonaws.com" to the target Amazon S3. "%(bucket)s" and "%(location)s" vars can be used
+if the target S3 system supports dns based buckets.
+DNS-style bucket+hostname:port template for accessing a bucket [%(bucket)s.radosgw.com]: 10.10.10.60.7480
+
+Encryption password is used to protect your files from reading
+by unauthorized persons while in transfer to S3
+Encryption password: 
+Path to GPG program [/usr/bin/gpg]: 
+
+When using secure HTTPS protocol all communication with Amazon S3
+servers is protected from 3rd party eavesdropping. This method is
+slower than plain HTTP, and can only be proxied with Python 2.7 or newer
+Use HTTPS protocol [No]: 
+
+On some networks all internet access must go through a HTTP proxy.
+Try setting it here if you can't connect to S3 directly
+HTTP Proxy server name: 
+
+New settings:
+  Access Key: LPVTHWQXFNL4IA8686D9
+  Secret Key: 6l0hanpcltONN85bfTGN0sHOax2xsWm6JBqhSrMT
+  Default Region: US
+  S3 Endpoint: 10.10.10.60:7480
+  DNS-style bucket+hostname:port template for accessing a bucket: 10.10.10.60.7480
+  Encryption password: 
+  Path to GPG program: /usr/bin/gpg
+  Use HTTPS protocol: False
+  HTTP Proxy server name: 
+  HTTP Proxy server port: 0
+
+Test access with supplied credentials? [Y/n] 
+Please wait, attempting to list all buckets...
+Success. Your access key and secret key worked fine :-)
+
+Now verifying that encryption works...
+Not configured. Never mind.
+
+Save settings? [y/N] y
+Configuration saved to '/home/canhdx/.s3cfg'
+```
+
+Kiểm tra
+```sh 
+canhdx@BaCT:~$ s3cmd ls
+canhdx@BaCT:~$ s3cmd mb s3://canhdx
+Bucket 's3://canhdx/' created
+canhdx@BaCT:~$ 
+```
+
+# Thêm Wildcard cho DNS
+
+Cho phép các bucket được tạo ra sử dụng subdomain riêng biệt 
+
+VD: 
+- Chúng ta có bucket canhdx trên cụm phía trên 
+- Bình thường chúng ta sẽ có đường dẫn như sau radosgw.com/canhdx 
+![](../../images/radosgw/bucket01.png)
+- Khi sử dụng Wildcard sẽ có dạng như sau canhdx.radosgw.com
+
+Yêu cầu: Phải có DNS 
+    - có thể tự dựng 1 server nếu LAB
+    - Hoặc có domain đối với hệ thống public
+
+Bổ sung cấu hình cho các node Ceph (Thực hiện trên node Ceph01)
+```sh 
+cat << EOF >> /ceph-deploy/ceph.conf
+
+[client.rgw.ceph01]
+host = ceph01
+rgw_dns_name = s3.radosgw.com
+
+[client.rgw.ceph02]
+host = ceph02
+rgw_dns_name = s3.radosgw.com
+
+[client.rgw.ceph02]
+host = ceph02
+rgw_dns_name = s3.radosgw.com
+
+EOF
+```
+> Lưu ý: `rgw_dns_name` chính là domain chính cho cụm S3 storage của mình lúc này các bucket sẽ có dạng `bucketX.s3.radosgw.com`
+
+Push config sang các node (Thực hiện trên node Ceph01)
+```sh 
+cd /ceph-deploy/
+ceph-deploy --overwrite-conf config push ceph01 ceph02 ceph03
+```
+
+Thực hiện restart lại các service trên toàn bộ các node 
+```sh 
+systemctl restart ceph-mon@$(hostname -s)
+systemctl restart ceph-mgr@$(hostname -s)
+systemctl restart ceph-radosgw@rgw.$(hostname -s)
+``` 
+
+
+## Tạo SSL Let's Encrypt cho RadosGW
+
+Đối với hệ thống có Domain và IP Public chúng ta có thể sử dụng Let's Encrypt để tạo Cert SSL cho domain 
+
+VD: Ở đây mình dùng domain `thanhbaba.xyz` trỏ về IP Public 103.101.x.x
+
+- Trỏ bản ghi `*` cho domain `thanhbaba.xyz` về IP Public 
+- Trỏ bản ghi `s3.thanhbaba.xyz` về IP Public 
+- Trỏ bản ghi `*.s3.thanhbaba.xyz` về IP Public 
+- Tạo Cert Let's encrypt cho toàn bộ subdomain của `s3.thanhbaba.xyz`
+```sh 
+sudo certbot --server https://acme-v02.api.letsencrypt.org/directory -d \
+*.s3.thanhbaba.xyz -d s3.thanhbaba.xyz --manual --preferred-challenges dns-01 certonly --agree-tos
+```
+- Trong quá trình cài đặt sẽ yêu cầu tạo 1 bản ghi `TXT` cho domain `_acme-challenge.s3.thanhbaba.xyz` để xác thực ==> Tạo trên DNS
+
+```
+[root@ceph-admin ~]# certbot certonly --manual -d *.s3.thanhbaba.xyz -d s3.thanhbaba.xyz --agree-tos
+--manual-public-ip-logging-ok --preferred-challenges dns-01 --server
+https://acme-v02.api.letsencrypt.org/directory
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Plugins selected: Authenticator manual, Installer None
+Starting new HTTPS connection (1): acme-v02.api.letsencrypt.org
+Obtaining a new certificate
+Performing the following challenges:
+dns-01 challenge for s3.thanhbaba.xyz
+dns-01 challenge for s3.thanhbaba.xyz-------------------------------------------------------------------------------
+Please deploy a DNS TXT record under the name
+_acme-challenge.s3.thanhbaba.xyz with the following value:BzL-LXXkDWwdde8RFUnbQ3fdYt5N6ZXELu4T26KIXa4   <== This ValueBefore continuing, verify the record is deployed.-------------------------------------------------------------------------------
+Press Enter to continue-------------------------------------------------------------------------------
+Please deploy a DNS TXT record under the name
+_acme-challenge.s3.thanhbaba.xyz with the following value:O-_g-eeu4cSI0xXSdrw3OBrWVgzZXJC59Xjkhyk39MQ    <== This ValueBefore continuing, verify the record is deployed.
+```
+
+![](../../images/radosgw/dns.png)
+
+- Chờ 3-5p cho bản ghi được cập nhật bấm Enter 
+- Bổ sung Cert cho cấu hình Nginx 
+
+![](../../images/radosgw/nginx_cert.png)
+
+- Kiểm tra cấu hình và reload nginx 
+```
+nginx -t 
+nginx -s reload
+```
+
+## Kiểm tra kêt nối sử dụng s3cmd
+
+Như trên
+
+![](../../images/radosgw/s3cmd_https.gif)
 
 # Tài liệu tham khảo 
 
