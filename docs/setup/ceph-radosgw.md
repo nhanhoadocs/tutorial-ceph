@@ -702,6 +702,17 @@ vrrp_instance VI_1 {
 EOF
 ```
 
+## Cấu hình firealld, start và kiểm tra 
+
+Cấu hình firewalld cho phép VRRP sử dụng multicast 224.0.0.0/8 qua giao thức VRRP(112) trên card mạng mà chúng ta cấu hình. Nếu sử dụng AH(51) để chứng thực 2 bên cần cấu hình thêm rule cho AH 
+```	
+firewall-cmd --direct --permanent --add-rule ipv4 filter INPUT 0 --in-interface eth0 --destination 224.0.0.0/8 --protocol vrrp -j ACCEPT
+firewall-cmd --direct --permanent --add-rule ipv4 filter OUTPUT 0 --out-interface eth0 --destination 224.0.0.0/8 --protocol ah -j ACCEPT
+firewall-cmd --direct --permanent --add-rule ipv4 filter INPUT 0 --in-interface eth0 --destination 224.0.0.0/8 --protocol vrrp -j ACCEPT
+firewall-cmd --direct --permanent --add-rule ipv4 filter OUTPUT 0 --out-interface eth0 --destination 224.0.0.0/8 --protocol ah -j ACCEPT
+firewall-cmd --reload
+```
+
 Start và enable service 
 ```sh 
 systemctl enable --now keepalived
@@ -871,3 +882,6 @@ for bucket in conn.get_all_buckets():
 # Tài liệu tham khảo 
 
 [Tạo self cert Apache](https://www.linux.com/learn/creating-self-signed-ssl-certificates-apache-linux)
+[Keepalived](https://cuongquach.com/cau-hinh-keepalived-thuc-hien-ip-failover-he-thong-ha.html)
+[Nginx reverse proxy for RadosGW](https://cormachogan.com/2018/07/03/setting-up-nginx-reverse-proxy-for-distributed-minio-s3-deployment/)
+[Nginx proxy buffer cached](https://www.digitalocean.com/community/tutorials/understanding-nginx-http-proxying-load-balancing-buffering-and-caching)
