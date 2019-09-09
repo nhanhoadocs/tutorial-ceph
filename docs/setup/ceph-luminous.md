@@ -43,13 +43,17 @@ yum install chrony -y
 
 - Enable NTPD 
 ```sh 
-systemctl start chronyd 
-systemctl enable chronyd 
+systemctl enable --now chronyd 
 ```
 
 - Kiểm tra chronyd hoạt động 
 ```sh 
 chronyc sources -v 
+```
+
+- Set hwclock
+```sh
+hwclock --systohc
 ```
 
 - Đặt hostname
@@ -106,8 +110,8 @@ sudo chmod 0440 /etc/sudoers.d/cephuser
 
 - Vô hiệu hóa Selinux
 ```sh
-setenforce 0
 sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux
+sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
 ```
 
 - Mở port cho Ceph trên Firewalld  
