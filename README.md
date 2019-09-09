@@ -50,7 +50,13 @@
 
 # Tài liệu vận hành
 
+## CheatSheet thao tác 
+
 [Ceph Cheat sheet](docs/operating/ceph-cheat-sheet.md)
+
+## Module của MGR
+
+[Ceph Module Balancer](docs/operating/ceph-module-balancer.md)
 
 # Benchmark Troubleshooting
 

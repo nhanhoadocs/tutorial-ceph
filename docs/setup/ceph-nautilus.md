@@ -110,11 +110,8 @@ sudo chmod 0440 /etc/sudoers.d/cephuser
 
 - Vô hiệu hóa Selinux
 ```sh
-sudo setenforce 0
 sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux
-sed -i 's/SELINUX=permissive/SELINUX=disabled/g' /etc/sysconfig/selinux
 sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
-sed -i 's/SELINUX=permissive/SELINUX=disabled/g' /etc/selinux/config
 ```
 
 - Mở port cho Ceph trên Firewalld  

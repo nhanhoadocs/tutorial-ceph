@@ -40,14 +40,19 @@ yum install chrony -y
 
 - Enable NTPD 
 ```sh 
-systemctl start chronyd 
-systemctl enable chronyd 
+systemctl enable --now chronyd 
 ```
 
 - Kiểm tra chronyd hoạt động 
 ```sh 
 chronyc sources -v 
 ```
+
+- Set hwclock
+```sh
+hwclock --systohc
+```
+
 
 - Đặt hostname
 ```sh
@@ -91,8 +96,8 @@ curl -Lso- https://raw.githubusercontent.com/nhanhoadocs/scripts/master/Utilitie
 
 - Vô hiệu hóa Selinux
 ```sh
-setenforce 0
 sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux
+sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
 ```
 
 - Mở port cho Ceph trên Firewalld  
@@ -156,18 +161,45 @@ sudo chmod 0440 /etc/sudoers.d/cephuser
 
 ## Cài đặt Ceph thực hiện trên cephaio
 
-Thực hiện bằng `root` user
+Bổ sung repo 
+```sh 
+cat <<EOF> /etc/yum.repos.d/ceph.repo
+[ceph]
+name=Ceph packages for $basearch
+baseurl=https://download.ceph.com/rpm-luminous/el7/x86_64/
+enabled=1
+priority=2
+gpgcheck=1
+gpgkey=https://download.ceph.com/keys/release.asc
+
+[ceph-noarch]
+name=Ceph noarch packages
+baseurl=https://download.ceph.com/rpm-luminous/el7/noarch
+enabled=1
+priority=2
+gpgcheck=1
+gpgkey=https://download.ceph.com/keys/release.asc
+
+[ceph-source]
+name=Ceph source packages
+baseurl=https://download.ceph.com/rpm-luminous/el7/SRPMS
+enabled=0
+priority=2
+gpgcheck=1
+gpgkey=https://download.ceph.com/keys/release.asc
+EOF
+
+yum update -y
+```
+
+- Cài đặt `python-setuptools`
+```sh 
+yum install python-setuptools -y
+```
 
 - Cài đặt `ceph-deploy`
 ```sh 
-sudo yum install -y wget 
-sudo wget https://download.ceph.com/rpm-luminous/el7/noarch/ceph-deploy-2.0.1-0.noarch.rpm --no-check-certificate
-sudo rpm -ivh ceph-deploy-2.0.1-0.noarch.rpm
-```
-
-- Cài đặt `python-setuptools` để `ceph-deploy` có thể hoạt động ổn định
-```sh 
-sudo curl https://bootstrap.pypa.io/ez_setup.py | python
+yum install ceph-deploy -y
 ```
 
 - Kiểm tra cài đặt 
@@ -179,28 +211,30 @@ ceph-deploy --version
 2.0.1
 ```
 
-Các bước ở dưới được thực hiện toàn toàn trên Node `cephaio` và sử dụng `cephuser` để thao tác
-
-- Chuyển qua User `cephuser` để thao tác
-```sh 
-su cephuser
-cd 
-```
-
 - Tạo ssh key 
 ```sh
 ssh-keygen
 ```
 > Bấm ENTER khi có requirement 
 
-- Copy ssh key sang các node khác
+
+- Cấu hình user ssh cho ceph-deploy
+```sh 
+cat <<EOF> /root/.ssh/config
+Host cephaio
+    Hostname cephaio
+    User cephuser
+EOF
+```
+
+- Copy ssh key sang
 ```sh
-ssh-copy-id cephuser@cephaio
+ssh-copy-id cephaio
 ```
 
 - Tạo các thư mục `ceph-deploy` để thao tác cài đặt vận hành Cluster
 ```sh
-mkdir ceph-deploy && cd ceph-deploy
+mkdir /ceph-deploy && cd /ceph-deploy
 ```
 
 - Khởi tại file cấu hình cho cụm với node quản lý là `cephaio`
