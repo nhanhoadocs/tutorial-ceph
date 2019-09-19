@@ -353,6 +353,21 @@ rbd showmapped
 rbd rm {pool-name}/{images}
 ```
 
+- Export volume thành file
+```sh 
+rbd export --rbd-concurrent-management-ops 20 --pool={pool-name} {images} {images}.img
+```
+
+- Import volume từ file (Lưu ý định dạng file `raw` nếu là VM disk)
+```sh 
+rbd import --image-format 2 {images}.img {pool-name}/{images}
+```
+
+- Đổi tên volume 
+```sh 
+rbd rename {pool-name}/{images_oldname}  {pool-name}/{images_newname}
+```
+
 - Create snapshot
 ```sh 
 rbd snap create {pool-name}/{images}@{snap-name}
@@ -401,16 +416,6 @@ rbd snap rm {pool-name}/{images}@{snap-name}
 - Xóa toàn bộ snapshot của 1 volume 
 ```sh 
 rbd snap purge {pool-name}/{images}
-```
-
-- Export volume 
-```sh 
-rbd export --rbd-concurrent-management-ops 20 --pool={pool-name} {images} {images}.img
-```
-
-- Import volume 
-```sh 
-rbd import --image-format 2 {images}.img {pool-name}/{images}
 ```
 
 ## Các lệnh thao tác đối với Object
