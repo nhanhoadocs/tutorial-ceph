@@ -173,25 +173,26 @@ ceph mgr module enable {module}
 ```sh 
 ceph-volume lvm list
 ```
-    > Output 
-    ```sh 
-    ====== osd.1 =======
 
-    [block]    /dev/ceph-3622c3ad-e4e5-4bdb-9399-1934becdae8f/osd-block-7e929d2e-5026-4590-8abd-c596d7e3e2e0
+> Output 
+```sh 
+====== osd.1 =======
 
-        type                      block
-        osd id                    1
-        cluster fsid              7d3f2102-face-4012-a616-372615f2f54f
-        cluster name              ceph
-        osd fsid                  7e929d2e-5026-4590-8abd-c596d7e3e2e0
-        encrypted                 0
-        cephx lockbox secret      
-        block uuid                BYR5va-JZrp-qfWV-rngf-iazj-CEdN-A3SShX
-        block device              /dev/ceph-3622c3ad-e4e5-4bdb-9399-1934becdae8f/osd-block-7e929d2e-5026-4590-8abd-c596d7e3e2e0
-        vdo                       0
-        crush device class        None
-        devices                   /dev/sdc
-    ```
+[block]    /dev/ceph-3622c3ad-e4e5-4bdb-9399-1934becdae8f/osd-block-7e929d2e-5026-4590-8abd-c596d7e3e2e0
+
+type                      block
+osd id                    1
+cluster fsid              7d3f2102-face-4012-a616-372615f2f54f
+cluster name              ceph
+osd fsid                  7e929d2e-5026-4590-8abd-c596d7e3e2e0
+encrypted                 0
+cephx lockbox secret      
+block uuid                BYR5va-JZrp-qfWV-rngf-iazj-CEdN-A3SShX
+block device              /dev/ceph-3622c3ad-e4e5-4bdb-9399-1934becdae8f/osd-block-7e929d2e-5026-4590-8abd-c596d7e3e2e0
+vdo                       0
+crush device class        None
+devices                   /dev/sdc
+```
 
 - Hiển thị trạng thái các OSD trong cụm 
 ```sh 
@@ -459,8 +460,7 @@ rados -p {pool-name} listwatchers {object-file}
 
 - Create pool cho cephfs 
 ```sh 
-osd pool create <poolname> <int[0-]> {<int[0-]>} {replicated|erasure} {<erasure_code_profile>} {<rule>}   create pool
-{<int>}   
+osd pool create <poolname> <int[0-]> {<int[0-]>} {replicated|erasure}{<erasure_code_profile>} {<rule>}   create pool {<int>}   
 ceph osd pool create cephfs_data 128
 ceph osd pool create cephfs_metadata 128
 ```
@@ -552,21 +552,104 @@ ceph osd reweight osd.{osd-id} {weight1}
 ceph osd crush reweight osd.{osd-id} {weight2}
 ```
 Trong đó: 
-    - {weight1}: Recommend là % sử dụng của cụm tương ứng với %use mà chúng ta muốn đẩy vào ổ mới 
-    - {weight2}: Là dung lượng thực tế của ổ tính theo TiB, Ceph sẽ dựa trên tham số này để định lượng data đẩy vào OSD sau này 
+
+- `{weight1}`: Recommend là % sử dụng của cụm tương ứng với %use mà chúng ta muốn đẩy vào ổ mới 
+- `{weight2}`: Là dung lượng thực tế của ổ tính theo TiB, Ceph sẽ dựa trên tham số này để định lượng data đẩy vào OSD sau này 
 
 ## Show config ceph
-- Show config trong file ceph.conf của Ceph 
+
+
+Kiểm tra các config-key được setup cho `MGR`
+```sh 
+ceph config-key dump
+```
+
+Ví dụ: 
+```sh 
+root@Ceph01:~# ceph config-key dump
+{
+    "mgr/zabbix/identifier": "Ceph01",
+    "mgr/zabbix/interval": "60",
+    "mgr/zabbix/zabbix_host": "192.168.0.15",
+    "mgr/zabbix/zabbix_port": "10051",
+    "mgr/zabbix/zabbix_sender": "/usr/bin/zabbix_sender"
+}
+```
+
+Kiểm tra features
+```sh 
+ceph features
+```
+
+Ví dụ: 
+```sh 
+root@Ceph01:~# ceph features
+{
+    "mon": {
+        "group": {
+            "features": "0x3ffddff8eeacfffb",
+            "release": "luminous",
+            "num": 3
+        }
+    },
+    "osd": {
+        "group": {
+            "features": "0x3ffddff8eeacfffb",
+            "release": "luminous",
+            "num": 80
+        }
+    },
+    "client": {
+        "group": {
+            "features": "0x1ffddff8eea4fffb",
+            "release": "luminous",
+            "num": 466
+        },
+        "group": {
+            "features": "0x3ffddff8eeacfffb",
+            "release": "luminous",
+            "num": 405
+        }
+    }
+}
+```
+
+Kiểm tra versions các services trên cụm 
+```sh 
+ceph versions
+```
+
+Ví dụ: 
+```sh 
+root@Ceph01:~# ceph versions
+{
+    "mon": {
+        "ceph version 12.2.12 (1436006594665279fe734b4c15d7e08c13ebd777) luminous (stable)": 3
+    },
+    "mgr": {
+        "ceph version 12.2.12 (1436006594665279fe734b4c15d7e08c13ebd777) luminous (stable)": 2
+    },
+    "osd": {
+        "ceph version 12.2.12 (1436006594665279fe734b4c15d7e08c13ebd777) luminous (stable)": 6
+    },
+    "mds": {},
+    "overall": {
+        "ceph version 12.2.12 (1436006594665279fe734b4c15d7e08c13ebd777) luminous (stable)": 10
+    }
+}
+```
+
+Show config trong file ceph.conf của Ceph 
 ```sh 
 ceph-conf --show-conf
 ```
 
-- Show toàn bộ config của Ceph 
+Show toàn bộ config của Ceph 
 ```sh 
 ceph-conf --show-config
 ```
 
-- Kiểm tra dung lượng của các images hiện có
+Kiểm tra dung lượng của các images hiện có
 ```sh 
 for i in $(rbd ls {pool-name}); 
 do 
@@ -667,7 +750,7 @@ rbd create {ecpool-name}/{images} --size {size}
 ```sh 
 ceph osd crush set osd.0 1.0 root=default datacenter=dc1 room=room1 row=foo rack=bar host=foo-bar-1
 ```
-> VD trên set osd.0 có weight =1 và nằm dưới root/dc1/roomm1/foo/bar/foor-bar-1
+> VD trên set osd.0 có weight =1 và nằm dưới `/root/dc1/roomm1/foo/bar/foor-bar-1`
 
 - Xóa 1 bucket
 ```sh 
@@ -675,7 +758,6 @@ ceph osd crush rm {bucket-name}
 ```
 
 ## Ví dụ tùy chỉnh 
-
 ```sh
 # Add host node4
 ceph osd crush add-bucket node4 host
@@ -692,6 +774,21 @@ ceph osd crush set osd.11 0.00999 disktype=node4ssd
 ceph osd crush set osd.12 0.00999 disktype=node4hdd
 ```
 
+## Rebalance dữ liệu trên các OSD 
+
+Rebalance các ổ có `VAR` > 120% default 
+```sh 
+ceph osd reweight-by-utilization [percentage] 
+```
+
+Điều chỉnh bằng tay 
+```sh 
+ceph osd reweight osd.{osd-id} {weight1} 
+```
+
+Enable module `balancer`
+
+`https://forum.proxmox.com/threads/ceph-balancing-osd-distribution-new-in-luminous.43328/`
 
 ## Tổng hợp thông tin PG của cụm
 ```sh 
@@ -754,6 +851,11 @@ echo "UUID=bfdf0e00-1d73-4bd9-a43e-32c408dbfdc9 /data ext4 noauto 0 0" >> /etc/f
 types = [ "rbd", 1024 ]
 ```
 
+Force unmount folder 
+```sh 
+rbd unmap -o force $DEV
+```
+
 ## Map cephfs trên Client
 
 Map cephfs như 1 NFS folder
@@ -765,12 +867,6 @@ sudo ceph-fuse -m 192.168.0.1:6789 /home/username/cephfs
 
 # Cấu hình trên fstab
 10.10.10.10:6789:/     /mnt/ceph    ceph    name=admin,secretfile=/etc/ceph/secret.key,noatime,_netdev    0       2
-```
-
-## Force unmount folder 
-
-```sh 
-rbd unmap -o force $DEV
 ```
 
 # Cấu hình ceph.conf tham khảo
