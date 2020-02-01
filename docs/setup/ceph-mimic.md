@@ -254,7 +254,7 @@ mkdir /ceph-deploy && cd /ceph-deploy
 
 - Khởi tại file cấu hình cho cụm với node quản lý là `mimic1`
 ```sh
-ceph-deploy new mimic1
+ceph-deploy new mimic1 mimic2 mimic3
 ```
 
 - Kiểm tra lại thông tin folder `ceph-deploy`

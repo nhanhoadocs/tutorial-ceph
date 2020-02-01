@@ -255,7 +255,7 @@ mkdir /ceph-deploy && cd /ceph-deploy
 
 - Khởi tại file cấu hình cho cụm với node quản lý là `ceph01`
 ```sh
-ceph-deploy new ceph01
+ceph-deploy new ceph01 ceph02 ceph03
 ```
 
 - Kiểm tra lại thông tin folder `ceph-deploy`

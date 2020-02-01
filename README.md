@@ -58,7 +58,7 @@
 
 [Ceph Module Balancer](docs/operating/ceph-module-balancer.md)
 
-# Benchmark Troubleshooting
+# Benchmark & Troubleshooting
 
 - [Node Ceph hỏng](docs/operating/ceph-hardware-crash.md)
 
