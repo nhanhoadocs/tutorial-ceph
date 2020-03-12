@@ -50,6 +50,10 @@
 
 # Tài liệu vận hành
 
+## Tắt/bật cluster
+
+[Tắt/bật cluster](docs/operating/off-on-cluster.md)
+
 ## CheatSheet thao tác 
 
 [Ceph Cheat sheet](docs/operating/ceph-cheat-sheet.md)
