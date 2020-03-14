@@ -1,6 +1,6 @@
 Below steps are taken from: https://ceph.io/planet/how-to-do-a-ceph-cluster-maintenance-shutdown/
 
-- Shutting down follow the below order:
+# Shutting down follow the below order:
 1.    Stop the clients from using the RBD images/Rados Gateway on this cluster or any other clients.
 2.    The cluster must be in healthy state before proceeding.
 3.    Set the noout, norecover, norebalance, nobackfill, nodown and pause flags
@@ -19,7 +19,7 @@ ceph osd set pause
 6.    Shutdown admin node
 
 
-- Bringing up follow the below order:
+# Bringing up follow the below order:
 1.    Power on the admin node
 2.    Power on the monitor nodes
 3.    Power on the osd nodes
