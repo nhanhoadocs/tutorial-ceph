@@ -1,5 +1,5 @@
 
-[Cài đặt Ceph bản Nautilus trên centos](docs/setup/ceph-nautilus-centos.md)
+[Cài đặt Ceph bản Nautilus trên centos](ceph-nautilus-centos.md)
 
 
-[Cài đặt Ceph bản Nautilus trên ubuntu](docs/setup/ceph-nautilus-ubuntu.md)
+[Cài đặt Ceph bản Nautilus trên ubuntu](ceph-nautilus-ubuntu.md)
