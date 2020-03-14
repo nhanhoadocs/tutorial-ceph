@@ -427,7 +427,7 @@ ceph-deploy mgr create ceph01 ceph02
 yum install ceph-mgr-dashboard -y
 ceph mgr module enable dashboard
 ceph dashboard create-self-signed-cert
-ceph dashboard set-login-credentials <username> <password>
+ceph dashboard ac-user-create <username> <password> administrator
 ceph mgr services
 ```
 
