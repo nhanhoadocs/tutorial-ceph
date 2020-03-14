@@ -3,6 +3,7 @@ Below steps are taken from: https://ceph.io/planet/how-to-do-a-ceph-cluster-main
 # Shutting down follow the below order:
 1.    Stop the clients from using the RBD images/Rados Gateway on this cluster or any other clients.
 2.    The cluster must be in healthy state before proceeding.
+> Check status on: https://ip-ceph01:8443
 3.    Set the noout, norecover, norebalance, nobackfill, nodown and pause flags
 ```sh
 ##Run on ceph1(mng node)
@@ -13,6 +14,10 @@ ceph osd set norebalance
 ceph osd set nobackfill
 ceph osd set nodown
 ceph osd set pause
+```
+> Status showing 
+```
+    OSDMAP_FLAGS: pauserd,pausewr,nodown,noout,nobackfill,norebalance,norecover flag(s) set 
 ```
 4.    Shutdown osd nodes one by one
 5.    Shutdown monitor nodes one by one
