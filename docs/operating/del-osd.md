@@ -16,3 +16,6 @@ ceph-deploy purge ceph4
 
 
 
+## Links tham khảo
+https://www.virtualtothecore.com/adventures-with-ceph-storage-part-7-add-a-node-and-expand-the-cluster-storage/
+https://medium.com/@george.shuklin/how-to-remove-osd-from-ceph-cluster-b4c37cc0ec87
