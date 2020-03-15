@@ -54,6 +54,12 @@
 
 [Thêm osd](docs/operating/add-osd.md)
 
+## Cập nhật osd
+
+## Xoá osd
+
+[Xoá osd](docs/operating/del-osd.md)
+
 ## Tắt/bật cluster
 
 [Tắt/bật cluster](docs/operating/off-on-cluster.md)
