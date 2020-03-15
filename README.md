@@ -50,6 +50,10 @@
 
 # Tài liệu vận hành
 
+## Thêm osd
+
+[Thêm osd](docs/operating/add-osd.md)
+
 ## Tắt/bật cluster
 
 [Tắt/bật cluster](docs/operating/off-on-cluster.md)
