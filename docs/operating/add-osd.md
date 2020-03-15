@@ -1,3 +1,5 @@
+## Thêm mới osd cho cluster ceph đã cài đặt trên ubuntu 18.04
+
 ## Tạo user "cephuser" trên ceph4
 ```sh
 sudo useradd -m -s /bin/bash cephuser
@@ -6,12 +8,12 @@ echo "cephuser ALL = (root) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/cephuser
 sudo chmod 0440 /etc/sudoers.d/cephuser
 sudo sed -i s'/Defaults requiretty/#Defaults requiretty'/g /etc/sudoers
 ```
-##Trên ceph1, lệnh bên dưới đều thao tác bằng user "cephuser"
-Thêm node mới (ceph4) vào file hosts:
+## Lệnh bên dưới đều thao tác bằng user "cephuser", trên node ceph1
+- Thêm node mới (ceph4) vào file hosts:
 ```
 /etc/hots
 ```
-File quản lý clush:
+- File quản lý clush:
 ```
 /etc/clustershell/groups
 ```
