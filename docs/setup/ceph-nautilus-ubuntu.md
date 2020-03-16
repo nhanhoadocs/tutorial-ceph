@@ -48,6 +48,7 @@ echo 'all: ceph[01-03]' > /etc/clustershell/groups
 ```
 
 ## Tạo user "cephuser" trên tất cả các node
+```sh
 sudo useradd -m -s /bin/bash cephuser
 passwd cephuser
 echo "cephuser ALL = (root) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/cephuser
@@ -58,7 +59,7 @@ su - cephuser
 ssh-keygen
 
 for i in {1..3}; do ssh-copy-id ceph$i ; done
-
+```
 ## Các bước chuẩn bị trên từng Server
 
 - Cài đặt Python, ntp
