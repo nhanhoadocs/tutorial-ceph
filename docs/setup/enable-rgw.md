@@ -23,3 +23,5 @@ ceph dashboard set-rgw-api-secret-key <secret_key>
 
 Links tham khảo:
 https://docs.ceph.com/docs/nautilus/mgr/dashboard/#enabling-the-object-gateway-management-frontend
+https://www.gitmemory.com/issue/rook/rook/3026/529326017
+
