@@ -74,6 +74,8 @@
 
 # Benchmark & Troubleshooting
 
+- [Lỗi không tạo bucket](docs/operating/bucket-err.md)
+
 - [Node Ceph hỏng](docs/operating/ceph-hardware-crash.md)
 
 - [Note case vận hành](docs/operating/note.md)
