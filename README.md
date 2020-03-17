@@ -50,6 +50,7 @@
 
 # Tài liệu vận hành
 
+
 ## Thêm osd
 
 [Thêm osd](docs/operating/add-osd.md)
@@ -59,6 +60,10 @@
 ## Xoá osd
 
 [Xoá osd](docs/operating/del-osd.md)
+
+## Bật rgw
+
+[Bật rgw](docs/operating/enable-rgw.md)
 
 ## Tắt/bật cluster
 
