@@ -84,7 +84,7 @@ hostnamectl set-hostname ceph01
 
 - Cài đặt CMD_log 
 ```sh 
-clush -a "wget -Lso- https://raw.githubusercontent.com/nhanhoadocs/scripts/master/Utilities/cmdlog.sh | sudo bash"
+clush -a "curl -Lso- https://raw.githubusercontent.com/nhanhoadocs/scripts/master/Utilities/cmdlog.sh | sudo bash"
 ```
 
 Hoặc
