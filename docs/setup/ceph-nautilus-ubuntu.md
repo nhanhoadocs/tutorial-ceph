@@ -50,7 +50,7 @@ echo 'all: ceph[01-03]' > /etc/clustershell/groups
 ## Tạo user "cephuser" trên tất cả các node
 ```sh
 sudo useradd -m -s /bin/bash cephuser
-passwd cephuser
+sudo passwd cephuser
 echo "cephuser ALL = (root) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/cephuser
 sudo chmod 0440 /etc/sudoers.d/cephuser
 sudo sed -i s'/Defaults requiretty/#Defaults requiretty'/g /etc/sudoers
@@ -64,7 +64,7 @@ for i in {1..3}; do ssh-copy-id ceph$i ; done
 
 - Cài đặt Python, ntp
 ```sh 
-clush -a "sudo apt install ntp python -y"
+clush -a "sudo apt update && sudo apt install ntp python -y"
 ```
 
 - Kiểm tra thời gian
@@ -84,7 +84,7 @@ hostnamectl set-hostname ceph01
 
 - Cài đặt CMD_log 
 ```sh 
-clush -a "curl -Lso- https://raw.githubusercontent.com/nhanhoadocs/scripts/master/Utilities/cmdlog.sh | sudo bash"
+clush -a "wget -Lso- https://raw.githubusercontent.com/nhanhoadocs/scripts/master/Utilities/cmdlog.sh | sudo bash"
 ```
 
 Hoặc
