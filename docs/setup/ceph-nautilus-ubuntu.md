@@ -138,8 +138,8 @@ init 6
 Bổ sung repo cho ceph trên tất cả các node
 ```sh 
 clush -a "curl -Lso- 'https://download.ceph.com/keys/release.asc' | sudo apt-key add -"
-clush -a "sudo apt update -y"
 clush -a "echo deb https://download.ceph.com/debian-nautilus/ $(lsb_release -sc) main | sudo tee /etc/apt/sources.list.d/ceph.list"
+clush -a "sudo apt update -y"
 ```
 
 Các bước ở dưới được thực hiện toàn toàn trên Node `ceph01`
