@@ -62,13 +62,14 @@ for i in {1..3}; do ssh-copy-id ceph$i ; done
 ```
 ## Các bước chuẩn bị trên từng Server
 
-- Cài đặt Python, ntp
+- Cài đặt Python, ntpdate
 ```sh 
-clush -a "sudo apt update && sudo apt install ntp python -y"
+clush -a "sudo apt update && sudo apt install ntpdate python -y"
 ```
 
-- Kiểm tra thời gian
+- Cập nhật thời gian
 ```sh 
+clush -a "sudo ntpdate 1.ro.pool.ntp.org"
 clush -a "timedatectl"
 ```
 
@@ -222,7 +223,7 @@ ceph-deploy install --release nautilus ceph01 ceph02 ceph03
 
 - Kiểm tra sau khi cài đặt trên cả 3 node
 ```sh 
-ceph -v 
+clush -a "ceph -v"
 ```
 
 - Khởi tạo cluster với các node `mon` (Monitor-quản lý) dựa trên file `ceph.conf`
@@ -231,7 +232,7 @@ ceph-deploy mon create-initial
 ```
 
 - Sau khi thực hiện lệnh phía trên sẽ sinh thêm ra 05 file : 
-`ceph.bootstrap-mds.keyring`, `ceph.bootstrap-mgr.keyring`, `ceph.bootstrap-osd.keyring`, `ceph.client.admin.keyring` và `ceph.bootstrap-rgw.keyring`. Quan sát bằng lệnh `ll -alh`
+`ceph.bootstrap-mds.keyring`, `ceph.bootstrap-mgr.keyring`, `ceph.bootstrap-osd.keyring`, `ceph.client.admin.keyring` và `ceph.bootstrap-rgw.keyring`.
 
 ```sh
 [cephuser@ceph01 ceph-deploy]# ls -lah
@@ -395,4 +396,4 @@ ceph -s
     pgs:          
 ```
 
-- Nếu có dòng `health HEALTH_OK` thì việc cài đặt đã ok.
+- Nếu có dòng `health HEALTH_OK` thì việc cài đặt đã thành công.
