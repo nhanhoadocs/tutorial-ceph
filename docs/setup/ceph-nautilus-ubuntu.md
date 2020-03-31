@@ -75,7 +75,7 @@ clush -a "timedatectl"
 
 - Set hwclock 
 ```sh 
-clush -a "hwclock --systohc"
+clush -a "sudo hwclock --systohc"
 ```
 
 - Đặt hostname (chạy lệnh trên từng node)
