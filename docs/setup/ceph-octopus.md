@@ -306,6 +306,7 @@ ceph-deploy mgr create ceph01 ceph02
 ```sh
 clush -w ceph[01,02] "sudo apt install ceph-mgr-dashboard -y"
 sudo ceph mgr module enable dashboard
+# Nếu có lỗi "...No module named 'distutils.util' (pass --force to force enablement)", hãy cài "sudo apt-get install python-distutils-extra"
 sudo ceph dashboard create-self-signed-cert
 sudo ceph dashboard ac-user-create <username> <password> administrator
 sudo ceph mgr services
