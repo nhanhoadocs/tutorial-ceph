@@ -317,7 +317,7 @@ sudo ceph mgr services
 ```sh 
 https://<ip-ceph01>:8443
 ```
-![](../../images/dashboard-n.png)
+![](../../images/dashboard-o.png)
 
 
 ## Khởi tạo OSD
