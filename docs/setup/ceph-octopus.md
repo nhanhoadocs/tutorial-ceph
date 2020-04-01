@@ -17,7 +17,7 @@
     - `eth0`: dùng để ssh và tải gói cài đặt
     - `eth1`: dùng để các trao đổi thông tin giữa các node Ceph, cũng là đường Client kết nối vào
     - `eth2`: dùng để đồng bộ dữ liệu giữa các OSD
-- Phiên bản cài đặt : Ceph Nautilus
+- Phiên bản cài đặt : Ceph Octopus
 
 
 ## Mô hình 
