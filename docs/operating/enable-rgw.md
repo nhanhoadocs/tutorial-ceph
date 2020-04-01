@@ -1,4 +1,6 @@
-Bật Object Gateway Management(OGM). Để dùng được OGM chúng ta cần cung cấp thông tài khoản có cờ "system".
+## Bật Object Gateway Management(OGM). 
+
+Để dùng được OGM chúng ta cần cung cấp thông tài khoản có cờ "system".
 
 Cú pháp tạo user với cờ "system"
 
