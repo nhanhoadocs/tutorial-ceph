@@ -1,12 +1,13 @@
-Below steps are taken from: https://ceph.io/planet/how-to-do-a-ceph-cluster-maintenance-shutdown/
+## Hướng dẫn cách tắt/bật cluster
 
-# Shutting down follow the below order:
-1.    Stop the clients from using the RBD images/Rados Gateway on this cluster or any other clients.
-2.    The cluster must be in healthy state before proceeding.
-> Check status on: https://ip-ceph01:8443
-3.    Set the noout, norecover, norebalance, nobackfill, nodown and pause flags
+
+# Tắt (không thực hiện bước tiếp, nếu các bước trước không thoả mãn).
+1. Dừng sử dụng RBD images/Rados Gateway trên tất cả clients.
+2. Hãy chắc chắn cluster đang ở trạng thái "healthy".
+3. Bật cờ noout, norecover, norebalance, nobackfill, nodown and pause.
+
 ```sh
-##Run on ceph1(mng node)
+##Chạy trên ceph01 (mng node)
 
 ceph osd set noout
 ceph osd set norecover
@@ -15,21 +16,22 @@ ceph osd set nobackfill
 ceph osd set nodown
 ceph osd set pause
 ```
-> Status showing 
+> Status hiển thị
 ```
     OSDMAP_FLAGS: pauserd,pausewr,nodown,noout,nobackfill,norebalance,norecover flag(s) set 
 ```
-4.    Shutdown osd nodes one by one
-5.    Shutdown monitor nodes one by one
-6.    Shutdown admin node
+4. Shutdown lần lượt osd node.
+5. Shutdown lần lượt monitor node.
+6. Shutdown admin node.
 
 
-# Bringing up follow the below order:
-1.    Power on the admin node
-2.    Power on the monitor nodes
-3.    Power on the osd nodes
-4.    Wait for all the nodes to come up , Verify all the services are up and the connectivity is fine between the nodes.
-5.    Unset all the noout,norecover,noreblance, nobackfill, nodown and pause flags.
+# Bật
+
+1. Bật nguồn admin node.
+2. Bật nguồn monitor node.
+3. Bật nguồn osd node.
+4. Đợi tới khi tất cả các node được bật, kiểm tra kết nối thành công giữa các node.
+5. Tắt cờ noout,norecover,noreblance, nobackfill, nodown and pause.
 
 ```sh
 ##Run on ceph1(mng node)
@@ -41,4 +43,7 @@ ceph osd unset nodown
 ceph osd unset pause
 ```
 
-6.    Check and verify the cluster is in healthy state, Verify all the clients are able to access the cluster.
+6. Kiểm tra trạng thái của cluster và kết nối lại từ các client.
+
+# Links tham khảo:
+https://ceph.io/planet/how-to-do-a-ceph-cluster-maintenance-shutdown/
