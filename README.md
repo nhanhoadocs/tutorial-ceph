@@ -34,6 +34,8 @@
 
 [Cài đặt Ceph bản Nautilus](docs/setup/ceph-nautilus.md)
 
+[Cài đặt Ceph bản Octopus](docs/setup/ceph-octopus.md)
+
 [Cài đặt Ceph-RadosGW HA bản Nautilus](docs/setup/ceph-radosgw.md)
 
 # Tài liệu tích hợp
