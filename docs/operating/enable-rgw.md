@@ -1,31 +1,31 @@
-Enabling the Object Gateway Management Frontend
+Bật Object Gateway Management(OGM). Để dùng được OGM chúng ta cần cung cấp thông tài khoản có cờ "system".
 
-To use the Object Gateway management functionality of the dashboard, you will need to provide the login credentials of a user with the system flag enabled.
-
-If you do not have a user which shall be used for providing those credentials, you will also need to create one:
+Cú pháp tạo user với cờ "system"
 
 ```sh
 sudo radosgw-admin user create --uid=<user_id> --display-name=<display_name> --system
 ```
-Take note of the keys access_key and secret_key in the output of this command.
+Lưu lại access_key và secret_key.
 
-The credentials of an existing user can also be obtained by using radosgw-admin:
+Command sử dụng trong trường hợp không nhớ access_key và secret_key của use:
 
 ```sh
 sudo radosgw-admin user info --uid=<user_id>
 ```
-Finally, provide the credentials to the dashboard:
+
+Command gán quyền truy xuất dashboard cho user:
 
 ```sh
 sudo ceph dashboard set-rgw-api-access-key <access_key>
 sudo ceph dashboard set-rgw-api-secret-key <secret_key>
 ```
-If you are using a self-signed certificate in your Object Gateway setup, then you should disable certificate verification in the dashboard to avoid refused connections, e.g. caused by certificates signed by unknown CA or not matching the host name:
+
+Nếu sử dụng chứng chỉ tự ký, có thể sẽ gặp một số lỗi về chứng chỉ, vậy chúng ta sẽ tắt xác nhận ssl của rgw: 
 
 ```sh
 sudo ceph dashboard set-rgw-api-ssl-verify False
 ```
-Disable/enable dashboard
+Tắt/bật lại dashboard
 
 ```sh
 sudo ceph mgr module disable dashboard
