@@ -34,6 +34,8 @@
 
 [Cài đặt Ceph bản Nautilus](docs/setup/ceph-nautilus.md)
 
+[Cài đặt Ceph bản Octopus](docs/setup/ceph-octopus.md)
+
 [Cài đặt Ceph-RadosGW HA bản Nautilus](docs/setup/ceph-radosgw.md)
 
 # Tài liệu tích hợp
@@ -50,6 +52,25 @@
 
 # Tài liệu vận hành
 
+
+## Thêm osd
+
+[Thêm osd](docs/operating/add-osd.md)
+
+## Cập nhật osd
+
+## Xoá osd
+
+[Xoá osd](docs/operating/del-osd.md)
+
+## Bật rgw
+
+[Bật rgw](docs/operating/enable-rgw.md)
+
+## Tắt/bật cluster
+
+[Tắt/bật cluster](docs/operating/off-on-cluster.md)
+
 ## CheatSheet thao tác 
 
 [Ceph Cheat sheet](docs/operating/ceph-cheat-sheet.md)
@@ -59,6 +80,8 @@
 [Ceph Module Balancer](docs/operating/ceph-module-balancer.md)
 
 # Benchmark & Troubleshooting
+
+- [Lỗi không tạo bucket](docs/operating/bucket-err.md)
 
 - [Node Ceph hỏng](docs/operating/ceph-hardware-crash.md)
 
